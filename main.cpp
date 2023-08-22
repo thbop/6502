@@ -71,7 +71,7 @@ struct CPU {
 
 
     void Reset( Mem& memory ) {
-        PC = 0xFFFC;
+        PC = 0x200; // Natively 0xFFFC
         SP = 0x0100;
         C = Z = I = D = B = V = N = 0;
         A = X = Y = 0;
@@ -79,6 +79,7 @@ struct CPU {
         memory.Initialize();
     }
 
+    // Fetch, Read, Write
     Byte FetchByte( u32& Cycles, Mem& memory ) {
         Byte Data = memory[PC];
         PC++;
@@ -123,22 +124,21 @@ struct CPU {
         return Data;
     }
 
-    // opcodes
-    static constexpr Byte
-        INS_LDA_IM = 0xA9,
-        INS_LDA_ZP = 0xA5,
-        INS_LDA_ZPX = 0xB5,
-        INS_LDA_ABS = 0xAD,
-        INS_LDA_ABX = 0xBD,
-        INS_LDA_ABY = 0xB9,
-        INS_LDA_IX = 0xA1,
-        INS_LDA_IY = 0xB1,
-        INS_JSR = 0x20;
-
+    // Helper functions
     void LDASetStatus() {
         // Set means is value of 1 or True
         Z = (A == 0); // Set if A = 0
         N = (A & 0b10000000) > 0; // Set if bit 7 of A is set
+    }
+
+    void LDXSetStatus() {
+        Z = (X == 0);
+        N = (X & 0b10000000) > 0;
+    }
+
+    void LDYSetStatus() {
+        Z = (Y == 0);
+        N = (X & 0b10000000) > 0;
     }
 
     void CheckPageOverflow( Word Value, Byte Adder, u32& Cycles ) {
@@ -155,9 +155,17 @@ struct CPU {
     
     Byte LoadZeroPageX( u32& Cycles, Mem& memory ) { // 3 cycles
         Byte ZeroPageAddr = FetchByte( Cycles, memory );
-        ZeroPageAddr += X; // No overflow handling...
-        printf("%x\n", ZeroPageAddr);
+        ZeroPageAddr += X; // Wraps around the Zero Page
         Cycles--;
+
+        return ReadByte( ZeroPageAddr, Cycles, memory );
+    }
+
+    Byte LoadZeroPageY( u32& Cycles, Mem& memory ) { // 3 cycles
+        Byte ZeroPageAddr = FetchByte( Cycles, memory );
+        ZeroPageAddr += Y; // Wraps around the Zero Page
+        Cycles--;
+
         return ReadByte( ZeroPageAddr, Cycles, memory );
     }
 
@@ -173,10 +181,10 @@ struct CPU {
         return ReadByte( AbsAddr, Cycles, memory );
     }
 
-    Byte LoadAbsoluteY( u32& Cycles, Mem& memory ) { // 3-4 cycles
+    Byte LoadAbsoluteY( u32& Cycles, Mem& memory, bool PageCrossable=true ) { // 3-4 cycles
         Word AbsAddr = FetchWord( Cycles, memory );
         AbsAddr += Y;
-        CheckPageOverflow( AbsAddr, Y, Cycles ); // Checks if the LSB crossed the page
+        if (PageCrossable) { CheckPageOverflow( AbsAddr, Y, Cycles ); } // Checks if the LSB crossed the page
         return ReadByte( AbsAddr, Cycles, memory );
     }
 
@@ -199,15 +207,42 @@ struct CPU {
         return ReadByte( TargetAddr, Cycles, memory );
     }
 
+    // opcodes
+    static constexpr Byte
+        // LDA
+        INS_LDA_IM = 0xA9,
+        INS_LDA_ZP = 0xA5,
+        INS_LDA_ZPX = 0xB5,
+        INS_LDA_ABS = 0xAD,
+        INS_LDA_ABX = 0xBD,
+        INS_LDA_ABY = 0xB9,
+        INS_LDA_IX = 0xA1,
+        INS_LDA_IY = 0xB1,
+
+        // LDX
+        INS_LDX_IM = 0xA2,
+        INS_LDX_ZP = 0xA6,
+        INS_LDX_ZPY = 0xB6,
+        INS_LDX_ABS = 0xAE,
+        INS_LDX_ABY = 0xBE,
+
+        // LDY
+        INS_LDY_IM = 0xA0,
+        INS_LDY_ZP = 0xA4,
+        INS_LDY_ZPX = 0xB4,
+        INS_LDY_ABS = 0xAC,
+        INS_LDY_ABX = 0xBC,
+
+        INS_JSR = 0x20;
 
     void Execute( u32 Cycles, Mem& memory ) {
         while (Cycles > 0) {
             Byte Ins = FetchByte( Cycles, memory );
 
             switch( Ins ) {
+                // LDA
                 case INS_LDA_IM: {
-                    Byte Value = FetchByte( Cycles, memory );
-                    A = Value;
+                    A = FetchByte( Cycles, memory );
                     LDASetStatus();
                 } break;
                 case INS_LDA_ZP: {
@@ -239,7 +274,49 @@ struct CPU {
                     LDASetStatus();
                 } break;
 
-                
+                // LDX
+                case INS_LDX_IM: {
+                    X = FetchByte( Cycles, memory );
+                    LDXSetStatus();
+                } break;
+                case INS_LDX_ZP: {
+                    X = LoadZeroPage( Cycles, memory );
+                    LDXSetStatus();
+                } break;
+                case INS_LDX_ZPY: {
+                    X = LoadZeroPageY( Cycles, memory );
+                    LDXSetStatus();
+                } break;
+                case INS_LDX_ABS: {
+                    X = LoadAbsolute( Cycles, memory );
+                    LDXSetStatus();
+                } break;
+                case INS_LDX_ABY: {
+                    X = LoadAbsoluteY( Cycles, memory, false );
+                    LDXSetStatus();
+                } break;
+
+                // LDY
+                case INS_LDY_IM: {
+                    Y = FetchByte( Cycles, memory );
+                    LDYSetStatus();
+                } break;
+                case INS_LDY_ZP: {
+                    Y = LoadZeroPage( Cycles, memory );
+                    LDYSetStatus();
+                } break;
+                case INS_LDY_ZPX: {
+                    Y = LoadZeroPageX( Cycles, memory );
+                    LDYSetStatus();
+                } break;
+                case INS_LDY_ABS: {
+                    Y = LoadAbsolute( Cycles, memory );
+                    LDYSetStatus();
+                } break;
+                case INS_LDY_ABX: {
+                    Y = LoadAbsoluteX( Cycles, memory );
+                    LDYSetStatus();
+                } break;
 
                 case INS_JSR: {
                     Word SubAddr = FetchWord( Cycles, memory );
@@ -273,7 +350,8 @@ int main() {
 
     cpu.Execute( 4, mem );
 
-    printf("A = $%x\n", cpu.A);
+    printf("X = $%x\n", cpu.X);
+
 
 
     return 0;
