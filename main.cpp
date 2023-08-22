@@ -87,7 +87,7 @@ struct CPU {
 
 
     void Reset( Mem& memory ) {
-        PC = 0x200; // Natively 0xFFFC
+        PC = 0x0200; // Natively 0xFFFC
         SP = 0x0100;
         C = Z = I = D = B = V = N = 0;
         A = X = Y = 0;
@@ -157,6 +157,19 @@ struct CPU {
         N = (X & 0b10000000) > 0;
     }
 
+    void LSRSetStatus( Byte BitZero, Byte result ) {
+        C = BitZero;
+        Z = (result == 0);
+        N = (result & 0b10000000) > 0;
+    }
+
+    void LSR( Byte& Value, u32& Cycles ) { // Handles SetStatus and takes 1 cycle
+        Byte BitZero = (0b00000001 & Value);
+        Value = (Value >> 1);
+        Cycles--;
+        LSRSetStatus( BitZero, Value );
+    }
+
     void CheckPageOverflow( Word Value, Byte Adder, u32& Cycles ) {
         Value &= 0x00FF;
         Value += Adder;
@@ -168,9 +181,20 @@ struct CPU {
         Byte ZeroPageAddr = FetchByte( Cycles, memory );
         return ReadByte( ZeroPageAddr, Cycles, memory );
     }
+    Byte LoadZeroPage( u32& Cycles, Mem& memory, Byte& ZeroPageAddr ) { // 2 cycles
+        ZeroPageAddr = FetchByte( Cycles, memory );
+        return ReadByte( ZeroPageAddr, Cycles, memory );
+    }
     
     Byte LoadZeroPageX( u32& Cycles, Mem& memory ) { // 3 cycles
         Byte ZeroPageAddr = FetchByte( Cycles, memory );
+        ZeroPageAddr += X; // Wraps around the Zero Page
+        Cycles--;
+
+        return ReadByte( ZeroPageAddr, Cycles, memory );
+    }
+    Byte LoadZeroPageX( u32& Cycles, Mem& memory, Byte& ZeroPageAddr ) { // 3 cycles
+        ZeroPageAddr = FetchByte( Cycles, memory );
         ZeroPageAddr += X; // Wraps around the Zero Page
         Cycles--;
 
@@ -189,18 +213,28 @@ struct CPU {
         Word AbsAddr = FetchWord( Cycles, memory );
         return ReadByte( AbsAddr, Cycles, memory );
     }
+    Byte LoadAbsolute( u32& Cycles, Mem& memory, Word& AbsAddr ) { // 3 cycles
+        AbsAddr = FetchWord( Cycles, memory );
+        return ReadByte( AbsAddr, Cycles, memory );
+    }
 
-    Byte LoadAbsoluteX( u32& Cycles, Mem& memory ) { // 3-4 cycles
+    Byte LoadAbsoluteX( u32& Cycles, Mem& memory, bool PageCrossable=true ) { // 3-4 cycles
         Word AbsAddr = FetchWord( Cycles, memory );
         AbsAddr += X;
-        CheckPageOverflow( AbsAddr, X, Cycles ); // Checks if the LSB crossed the page
+        if (PageCrossable) { CheckPageOverflow( AbsAddr, X, Cycles ); } // Checks if the LSB crossed the page
+        return ReadByte( AbsAddr, Cycles, memory );
+    }
+    Byte LoadAbsoluteX( u32& Cycles, Mem& memory, Word& AbsAddr, bool PageCrossable=true ) { // 3-4 cycles
+        AbsAddr = FetchWord( Cycles, memory );
+        AbsAddr += X;
+        if (PageCrossable) { CheckPageOverflow( AbsAddr, X, Cycles ); } // Checks if the LSB crossed the page
         return ReadByte( AbsAddr, Cycles, memory );
     }
 
     Byte LoadAbsoluteY( u32& Cycles, Mem& memory, bool PageCrossable=true ) { // 3-4 cycles
         Word AbsAddr = FetchWord( Cycles, memory );
         AbsAddr += Y;
-        if (PageCrossable) { CheckPageOverflow( AbsAddr, Y, Cycles ); } // Checks if the LSB crossed the page
+        if (PageCrossable) { CheckPageOverflow( AbsAddr, Y, Cycles ); }
         return ReadByte( AbsAddr, Cycles, memory );
     }
 
@@ -248,6 +282,12 @@ struct CPU {
         INS_LDY_ZPX = 0xB4,
         INS_LDY_ABS = 0xAC,
         INS_LDY_ABX = 0xBC,
+
+        INS_LSR_ACC = 0x4A,
+        INS_LSR_ZP = 0x46,
+        INS_LSR_ZPX = 0x56,
+        INS_LSR_ABS = 0x4E,
+        INS_LSR_ABX = 0x5E,
 
         INS_JSR = 0x20;
 
@@ -334,6 +374,39 @@ struct CPU {
                     LDYSetStatus();
                 } break;
 
+                // LSR
+                case INS_LSR_ACC: {
+                    LSR( A, Cycles ); // LSR handles SetStatus
+                } break;
+                case INS_LSR_ZP: {
+                    Byte ZeroPageAddr;
+                    Byte Value = LoadZeroPage( Cycles, memory, ZeroPageAddr );
+                    LSR( Value, Cycles );
+                    memory[ZeroPageAddr] = Value;
+                    Cycles--;
+                } break;
+                case INS_LSR_ZPX: {
+                    Byte ZeroPageAddr;
+                    Byte Value = LoadZeroPageX( Cycles, memory, ZeroPageAddr );
+                    LSR( Value, Cycles );
+                    memory[ZeroPageAddr] = Value;
+                    Cycles--;
+                } break;
+                case INS_LSR_ABS: {
+                    Word AbsAddr;
+                    Byte Value = LoadAbsolute( Cycles, memory, AbsAddr );
+                    LSR( Value, Cycles );
+                    memory[AbsAddr] = Value;
+                    Cycles--;
+                } break;
+                case INS_LSR_ABX: {
+                    Word AbsAddr;
+                    Byte Value = LoadAbsoluteX( Cycles, memory, AbsAddr, false );
+                    LSR( Value, Cycles );
+                    memory[AbsAddr] = Value;
+                    Cycles -= 2;
+                } break;
+
                 case INS_JSR: {
                     Word SubAddr = FetchWord( Cycles, memory );
                     memory.WriteWord( PC - 1, SP, Cycles );
@@ -360,13 +433,21 @@ int main() {
     cpu.Reset( mem );
 
     // start - inline cheat code
-    mem[0x0024] = 0x64;
+    mem[0x4576] = 0x12;
+
+    mem[0x0200] = CPU::INS_LDX_IM;
+    mem[0x0201] = 0x12;
+    mem[0x0202] = CPU::INS_LSR_ABX;
+    mem[0x0203] = 0x64;
+    mem[0x0204] = 0x45;
+
 
     // end - inline cheat code
-    mem.LoadFile("test.s");
-    cpu.Execute( 6, mem );
+    // mem.LoadFile("test.s");
+    cpu.Execute( 9, mem );
 
-    printf("A = $%x\n", cpu.A);
+    // printf("A = %x\n", cpu.A);
+    printf("%x\n", mem[0x4576]);
 
 
 
