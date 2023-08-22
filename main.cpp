@@ -4,6 +4,8 @@
         1. The initial inspiration and reference for this project was provided by Dave Poo's video:
         https://youtu.be/qJgsuQoy9bc
         2. https://web.archive.org/web/20200610195848/http://www.obelisk.me.uk/6502/
+        3. https://6502.co.uk/
+        4. http://www.emulator101.com/6502-addressing-modes.html
 */
 
 #include <stdio.h>
