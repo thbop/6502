@@ -52,6 +52,20 @@ struct Mem {
         Data[Address + 1] = (Value >> 8);
         Cycles -= 2;
     }
+
+    void LoadFile( const char *filename, Word startAddress=0x0200 ) {
+        // Code adapted from that written by Bard (https://bard.google.com/)
+        FILE *fp = fopen("test.bin", "r");
+        if (fp == NULL) {
+            printf("Could not open file.\n");
+        }
+        char line[MAX_MEM - 0x206]; // Max memory - 256 * 2 + 6
+        for (int i = 0; fgets(line, sizeof(line), fp); i++) {
+            int value = strtol(line, NULL, 16);
+            Data[i + startAddress] = (Byte)value;
+        }
+        fclose(fp);
+    }
 };
 
 
@@ -344,13 +358,13 @@ int main() {
     cpu.Reset( mem );
 
     // start - inline cheat code
-    
+
 
     // end - inline cheat code
+    mem.LoadFile("test.s");
+    cpu.Execute( 2, mem );
 
-    cpu.Execute( 4, mem );
-
-    printf("X = $%x\n", cpu.X);
+    printf("A = $%x\n", cpu.A);
 
 
 
