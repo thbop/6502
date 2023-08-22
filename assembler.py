@@ -20,15 +20,35 @@ base_file_name = args.file[ : args.file.find('.s')]
 
 address_mode_opcodes = {
     'IM': {
-        'lda': 'A9'
+        'lda': 'A9',
+        'ldx': 'A2',
+        'ldy': 'A0'
     },
     'ZP': {
-        'lda': 'A5'
+        'lda': 'A5',
+        'ldx':'A6',
+        'ldy': 'A4'
     },
     'ZPX': {
-        'lda': 'B5'
+        'lda': 'B5',
+        'ldy': 'B4'
     },
-    'ZPY': {}
+    'ZPY': {
+        'ldx':'B6'
+    },
+    'ABS':{
+        'lda': 'AD',
+        'ldx':'AE',
+        'ldy': 'AC'
+    },
+    'ABX': {
+        'lda':'BD',
+        'ldy': 'BC'
+    },
+    'ABY': {
+        'lda': 'B9',
+        'ldx':'BE'
+    }
 }
 
 out = ''
@@ -40,15 +60,23 @@ def get_opcode(address_mode, args):
 def parse_addressing_mode(args):
     # Some crude parsing...
     global out
-    if args[1][0] == '#': # Immediate
-        out += get_opcode('IM', args) + '\n' + args[1][1:]
+    arg1 = args[1].replace('\n', '')
+    if arg1[0] == '#': # Immediate
+        out += get_opcode('IM', args) + '\n' + arg1[1:] + '\n'
 
-    elif args[1][0] == '$':
-        if len(args[1]) == 3: # Zero Page
-            out += get_opcode('ZP', args) + '\n' + args[1][1:]
+    elif arg1[0] == '$':
+        if len(arg1) == 3: # Zero Page
+            out += get_opcode('ZP', args) + '\n' + arg1[1:] + '\n'
         
-        elif len(args[1]) == 4: # Zero Page X or Y
-            out += get_opcode('ZP'+args[2][0], args) + '\n' + args[1][1:-1]
+        elif len(arg1) == 4 and arg1[3] == ',': # Zero Page X or Y
+            out += get_opcode('ZP'+args[2][0], args) + '\n' + arg1[1:-1] + '\n'
+        
+        elif len(arg1) == 5: # Absolute
+            out += get_opcode('ABS', args) + '\n' + arg1[1:][2:] + '\n' + arg1[1:][:2] + '\n'
+        
+        elif len(arg1) == 6 and arg1[5] == ',': # Absolute X or Y
+            out += get_opcode('AB'+args[2][0], args) + '\n' + arg1[1:][2:-1] + '\n' + arg1[1:][:2] + '\n'
+
 
 
 
@@ -64,8 +92,8 @@ for l in s:
             if arg[0] == ';':
                 args = args[:i]
         
-        # Handle individual commands
-        if args[0].lower() == 'lda':
+        # Parse
+        if l != '\n':
             parse_addressing_mode(args)
 
 

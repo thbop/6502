@@ -358,11 +358,11 @@ int main() {
     cpu.Reset( mem );
 
     // start - inline cheat code
-
+    mem[0x0024] = 0x64;
 
     // end - inline cheat code
     mem.LoadFile("test.s");
-    cpu.Execute( 2, mem );
+    cpu.Execute( 6, mem );
 
     printf("A = $%x\n", cpu.A);
 
