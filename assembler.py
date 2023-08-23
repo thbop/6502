@@ -19,19 +19,28 @@ except FileNotFoundError:
 base_file_name = args.file[ : args.file.find('.s')]
 
 address_mode_opcodes = {
+    'ACC': { # Or implied
+        'lsr': '4A',
+        'nop': 'EA'
+    },
     'IM': {
         'lda': 'A9',
         'ldx': 'A2',
-        'ldy': 'A0'
+        'ldy': 'A0',
+        'ora': '09'
     },
     'ZP': {
         'lda': 'A5',
         'ldx':'A6',
-        'ldy': 'A4'
+        'ldy': 'A4',
+        'lsr': '46',
+        'ora': '05'
     },
     'ZPX': {
         'lda': 'B5',
-        'ldy': 'B4'
+        'ldy': 'B4',
+        'lsr': '56',
+        'ora': '15'
     },
     'ZPY': {
         'ldx':'B6'
@@ -39,15 +48,20 @@ address_mode_opcodes = {
     'ABS':{
         'lda': 'AD',
         'ldx':'AE',
-        'ldy': 'AC'
+        'ldy': 'AC',
+        'lsr': '4E',
+        'ora': '0D'
     },
     'ABX': {
         'lda':'BD',
-        'ldy': 'BC'
+        'ldy': 'BC',
+        'lsr': '5E',
+        'ora': '1D'
     },
     'ABY': {
         'lda': 'B9',
-        'ldx':'BE'
+        'ldx':'BE',
+        'ora': '19'
     }
 }
 
@@ -60,22 +74,25 @@ def get_opcode(address_mode, args):
 def parse_addressing_mode(args):
     # Some crude parsing...
     global out
-    arg1 = args[1].replace('\n', '')
-    if arg1[0] == '#': # Immediate
-        out += get_opcode('IM', args) + '\n' + arg1[1:] + '\n'
+    if len(args) == 1:
+        out += get_opcode('ACC', args) + '\n'
+    else:
+        arg1 = args[1].replace('\n', '')
+        if arg1[0] == '#': # Immediate
+            out += get_opcode('IM', args) + '\n' + arg1[1:] + '\n'
 
-    elif arg1[0] == '$':
-        if len(arg1) == 3: # Zero Page
-            out += get_opcode('ZP', args) + '\n' + arg1[1:] + '\n'
-        
-        elif len(arg1) == 4 and arg1[3] == ',': # Zero Page X or Y
-            out += get_opcode('ZP'+args[2][0], args) + '\n' + arg1[1:-1] + '\n'
-        
-        elif len(arg1) == 5: # Absolute
-            out += get_opcode('ABS', args) + '\n' + arg1[1:][2:] + '\n' + arg1[1:][:2] + '\n'
-        
-        elif len(arg1) == 6 and arg1[5] == ',': # Absolute X or Y
-            out += get_opcode('AB'+args[2][0], args) + '\n' + arg1[1:][2:-1] + '\n' + arg1[1:][:2] + '\n'
+        elif arg1[0] == '$':
+            if len(arg1) == 3: # Zero Page
+                out += get_opcode('ZP', args) + '\n' + arg1[1:] + '\n'
+            
+            elif len(arg1) == 4 and arg1[3] == ',': # Zero Page X or Y
+                out += get_opcode('ZP'+args[2][0], args) + '\n' + arg1[1:-1] + '\n'
+            
+            elif len(arg1) == 5: # Absolute
+                out += get_opcode('ABS', args) + '\n' + arg1[1:][2:] + '\n' + arg1[1:][:2] + '\n'
+            
+            elif len(arg1) == 6 and arg1[5] == ',': # Absolute X or Y
+                out += get_opcode('AB'+args[2][0], args) + '\n' + arg1[1:][2:-1] + '\n' + arg1[1:][:2] + '\n'
 
 
 
@@ -89,7 +106,7 @@ for l in s:
 
     if not gotoNext:
         for i, arg in enumerate(args):
-            if arg[0] == ';':
+            if arg == '' or arg[0] == ';':
                 args = args[:i]
         
         # Parse

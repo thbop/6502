@@ -57,7 +57,7 @@ struct Mem {
 
     void LoadFile( const char *filename, Word startAddress=0x0200 ) {
         // Code adapted from that written by Bard (https://bard.google.com/)
-        FILE *fp = fopen("test.bin", "r");
+        FILE *fp = fopen(filename, "r");
         if (fp == NULL) {
             printf("Could not open file.\n");
         }
@@ -176,6 +176,8 @@ struct CPU {
         if (Value > 0xFF) { Cycles--; }
     }
 
+    void ORASetStatus() { LDASetStatus(); }
+
     // Addressing modes
     Byte LoadZeroPage( u32& Cycles, Mem& memory ) { // 2 cycles
         Byte ZeroPageAddr = FetchByte( Cycles, memory );
@@ -283,17 +285,32 @@ struct CPU {
         INS_LDY_ABS = 0xAC,
         INS_LDY_ABX = 0xBC,
 
+        // LSR
         INS_LSR_ACC = 0x4A,
         INS_LSR_ZP = 0x46,
         INS_LSR_ZPX = 0x56,
         INS_LSR_ABS = 0x4E,
         INS_LSR_ABX = 0x5E,
 
+        // NOP
+        INS_NOP = 0xEA,
+
+        // ORA
+        INS_ORA_IM = 0x09,
+        INS_ORA_ZP = 0x05,
+        INS_ORA_ZPX = 0x15,
+        INS_ORA_ABS = 0x0D,
+        INS_ORA_ABX = 0x1D,
+        INS_ORA_ABY = 0x19,
+        INS_ORA_IX = 0x01,
+        INS_ORA_IY = 0x11,
+
         INS_JSR = 0x20;
 
     void Execute( u32 Cycles, Mem& memory ) {
         while (Cycles > 0) {
             Byte Ins = FetchByte( Cycles, memory );
+            printf("Instruction: 0x%x\n", Ins);
 
             switch( Ins ) {
                 // LDA
@@ -407,6 +424,45 @@ struct CPU {
                     Cycles -= 2;
                 } break;
 
+                // NOP
+                case INS_NOP: {
+                    Cycles--;
+                } break;
+
+                // ORA
+                case INS_ORA_IM: {
+                    A |= FetchByte( Cycles, memory );
+                    ORASetStatus();
+                } break;
+                case INS_ORA_ZP: {
+                    A |= LoadZeroPage( Cycles, memory );
+                    ORASetStatus();
+                } break;
+                case INS_ORA_ZPX: {
+                    A |= LoadZeroPageX( Cycles, memory );
+                    ORASetStatus();
+                } break;
+                case INS_ORA_ABS: {
+                    A |= LoadAbsolute( Cycles, memory );
+                    ORASetStatus();
+                } break;
+                case INS_ORA_ABX: {
+                    A |= LoadAbsoluteX( Cycles, memory );
+                    ORASetStatus();
+                } break;
+                case INS_ORA_ABY: {
+                    A |= LoadAbsoluteY( Cycles, memory );
+                    ORASetStatus();
+                } break;
+                case INS_ORA_IX: {
+                    A |= LoadIndirectX( Cycles, memory );
+                    ORASetStatus();
+                } break;
+                case INS_ORA_IY: {
+                    A |= LoadIndirectY( Cycles, memory );
+                    ORASetStatus();
+                } break;
+
                 case INS_JSR: {
                     Word SubAddr = FetchWord( Cycles, memory );
                     memory.WriteWord( PC - 1, SP, Cycles );
@@ -433,22 +489,14 @@ int main() {
     cpu.Reset( mem );
 
     // start - inline cheat code
-    mem[0x4576] = 0x12;
 
-    mem[0x0200] = CPU::INS_LDX_IM;
-    mem[0x0201] = 0x12;
-    mem[0x0202] = CPU::INS_LSR_ABX;
-    mem[0x0203] = 0x64;
-    mem[0x0204] = 0x45;
-
+    // mem[0x0202] = CPU::INS_LSR_ACC;
 
     // end - inline cheat code
-    // mem.LoadFile("test.s");
-    cpu.Execute( 9, mem );
+    mem.LoadFile("test.bin");
+    cpu.Execute( 4, mem );
 
-    // printf("A = %x\n", cpu.A);
-    printf("%x\n", mem[0x4576]);
-
+    printf("A = %x\n", cpu.A);
 
 
     return 0;
