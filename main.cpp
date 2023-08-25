@@ -163,11 +163,24 @@ struct CPU {
         N = (result & 0b10000000) > 0;
     }
 
+    void ROLSetStatus( Byte OldByte ) {
+        SetAStatus();
+        C = (OldByte & 0b10000000) > 0;
+    }
+
     void LSR( Byte& Value, u32& Cycles ) { // Handles SetStatus and takes 1 cycle
         Byte BitZero = (0b00000001 & Value);
         Value = (Value >> 1);
         Cycles--;
         LSRSetStatus( BitZero, Value );
+    }
+
+    void ROL( Byte& Value, u32& Cycles ) { // Handles SetStatus and takes 1 cycle
+        Byte OldByte = Value;
+        Value = ( Value << 1 );
+        Value |= C; // Could also be +=
+        ROLSetStatus( OldByte );
+        Cycles--;
     }
 
     void CheckPageOverflow( Word Value, Byte Adder, u32& Cycles ) {
@@ -322,6 +335,13 @@ struct CPU {
         INS_ORA_ABY = 0x19,
         INS_ORA_IX = 0x01,
         INS_ORA_IY = 0x11,
+
+        // ROL
+        INS_ROL_ACC = 0x2A,
+        INS_ROL_ZP = 0x26,
+        INS_ROL_ZPX = 0x36,
+        INS_ROL_ABS = 0x2E,
+        INS_ROL_ABX = 0x3E,
 
         INS_PHA = 0x48,
         INS_PHP = 0x08,
@@ -485,6 +505,40 @@ struct CPU {
                     SetAStatus();
                 } break;
 
+                // ROL
+                case INS_ROL_ACC: {
+                    ROL( A, Cycles );
+                } break;
+                case INS_ROL_ZP: {
+                    Byte ZeroPageAddr;
+                    Byte Value = LoadZeroPage( Cycles, memory, ZeroPageAddr );
+                    ROL( Value, Cycles );
+                    memory[ZeroPageAddr] = Value;
+                    Cycles--;
+                } break;
+                case INS_ROL_ZPX: {
+                    Byte ZeroPageAddr;
+                    Byte Value = LoadZeroPageX( Cycles, memory, ZeroPageAddr );
+                    ROL( Value, Cycles );
+                    memory[ZeroPageAddr] = Value;
+                    Cycles--;
+                } break;
+                case INS_ROL_ABS: {
+                    Word AbsAddr;
+                    Byte Value = LoadAbsolute( Cycles, memory, AbsAddr );
+                    ROL( Value, Cycles );
+                    memory[AbsAddr] = Value;
+                    Cycles--;
+                } break;
+                case INS_ROL_ABX: {
+                    Word AbsAddr;
+                    Byte Value = LoadAbsoluteX( Cycles, memory, AbsAddr, false );
+                    ROL( Value, Cycles );
+                    memory[AbsAddr] = Value;
+                    Cycles -= 2;
+                } break;
+                
+
                 // Implied instructions
                 case INS_PHA: {
                     memory[SP] = A;
@@ -535,15 +589,18 @@ int main() {
 
     // start - inline cheat code
 
-    mem[0x0202] = CPU::INS_PHA;
-    mem[0x0203] = CPU::INS_PLP;
+    // mem[0x0200] = CPU::INS_LDA_IM;
+    // mem[0x0201] = 0b00000001;
+    // mem[0x0202] = CPU::INS_ROL_ACC;
+
+    mem[0x6502] = 0x65;
 
     // end - inline cheat code
     mem.LoadFile("test.bin");
     cpu.Execute( 9, mem );
 
-    // printf("A = %x\n", cpu.A);
-    printf("0x%x\n", cpu.CombineFlags());
+    printf("A = %x\n", cpu.A);
+    printf("0x%x\n", mem[0x01FF]);
 
 
     return 0;

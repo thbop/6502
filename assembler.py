@@ -21,7 +21,12 @@ base_file_name = args.file[ : args.file.find('.s')]
 address_mode_opcodes = {
     'ACC': { # Or implied
         'lsr': '4A',
-        'nop': 'EA'
+        'nop': 'EA',
+        'pha': '48',
+        'php': '08',
+        'pla': '68',
+        'plp': '28',
+        'rol': '2A'
     },
     'IM': {
         'lda': 'A9',
@@ -34,13 +39,15 @@ address_mode_opcodes = {
         'ldx':'A6',
         'ldy': 'A4',
         'lsr': '46',
-        'ora': '05'
+        'ora': '05',
+        'rol': '26'
     },
     'ZPX': {
         'lda': 'B5',
         'ldy': 'B4',
         'lsr': '56',
-        'ora': '15'
+        'ora': '15',
+        'rol': '36'
     },
     'ZPY': {
         'ldx':'B6'
@@ -50,13 +57,15 @@ address_mode_opcodes = {
         'ldx':'AE',
         'ldy': 'AC',
         'lsr': '4E',
-        'ora': '0D'
+        'ora': '0D',
+        'rol': '2E'
     },
     'ABX': {
         'lda':'BD',
         'ldy': 'BC',
         'lsr': '5E',
-        'ora': '1D'
+        'ora': '1D',
+        'rol': '3E'
     },
     'ABY': {
         'lda': 'B9',
@@ -69,7 +78,7 @@ out = ''
 
 # Assemble
 def get_opcode(address_mode, args):
-    return address_mode_opcodes[address_mode][args[0].lower()]
+    return address_mode_opcodes[address_mode][args[0].lower().replace('\n', '')]
 
 def parse_addressing_mode(args):
     # Some crude parsing...
