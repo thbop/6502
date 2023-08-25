@@ -88,7 +88,7 @@ struct CPU {
 
     void Reset( Mem& memory ) {
         PC = 0x0200; // Natively 0xFFFC
-        SP = 0x0100;
+        SP = 0x01FF;
         C = Z = I = D = B = V = N = 0;
         A = X = Y = 0;
 
@@ -141,7 +141,7 @@ struct CPU {
     }
 
     // Helper functions
-    void LDASetStatus() {
+    void SetAStatus() { // Commonly used with accumulator operations
         // Set means is value of 1 or True
         Z = (A == 0); // Set if A = 0
         N = (A & 0b10000000) > 0; // Set if bit 7 of A is set
@@ -176,7 +176,25 @@ struct CPU {
         if (Value > 0xFF) { Cycles--; }
     }
 
-    void ORASetStatus() { LDASetStatus(); }
+    Byte CombineFlags() {
+        Byte flags[] = {C, Z, I, D, B, V, N};
+        Byte status = 0;
+        for (Byte f : flags) {
+            status = (status << 1) | f;
+        }
+        return status;
+    }
+
+    void SeparateFlags( Byte status ) {
+        C = (bool)( status & 0b01000000 );
+        Z = (bool)( status & 0b00100000 );
+        I = (bool)( status & 0b00010000 );
+        D = (bool)( status & 0b00001000 );
+        B = (bool)( status & 0b00000100 );
+        V = (bool)( status & 0b00000010 );
+        N = (bool)( status & 0b00000001 );
+    }
+    
 
     // Addressing modes
     Byte LoadZeroPage( u32& Cycles, Mem& memory ) { // 2 cycles
@@ -305,6 +323,10 @@ struct CPU {
         INS_ORA_IX = 0x01,
         INS_ORA_IY = 0x11,
 
+        INS_PHA = 0x48,
+        INS_PHP = 0x08,
+        INS_PLA = 0x68,
+        INS_PLP = 0x28,
         INS_JSR = 0x20;
 
     void Execute( u32 Cycles, Mem& memory ) {
@@ -316,35 +338,35 @@ struct CPU {
                 // LDA
                 case INS_LDA_IM: {
                     A = FetchByte( Cycles, memory );
-                    LDASetStatus();
+                    SetAStatus();
                 } break;
                 case INS_LDA_ZP: {
                     A = LoadZeroPage( Cycles, memory );
-                    LDASetStatus();
+                    SetAStatus();
                 } break;
                 case INS_LDA_ZPX: {
                     A = LoadZeroPageX( Cycles, memory );
-                    LDASetStatus();
+                    SetAStatus();
                 } break;
                 case INS_LDA_ABS: {
                     A = LoadAbsolute( Cycles, memory );
-                    LDASetStatus();
+                    SetAStatus();
                 } break;
                 case INS_LDA_ABX: {
                     A = LoadAbsoluteX( Cycles, memory );
-                    LDASetStatus();
+                    SetAStatus();
                 } break;
                 case INS_LDA_ABY: {
                     A = LoadAbsoluteY( Cycles, memory );
-                    LDASetStatus();
+                    SetAStatus();
                 } break;
                 case INS_LDA_IX: {
                     A = LoadIndirectX( Cycles, memory );
-                    LDASetStatus();
+                    SetAStatus();
                 } break;
                 case INS_LDA_IY: {
                     A = LoadIndirectY( Cycles, memory );
-                    LDASetStatus();
+                    SetAStatus();
                 } break;
 
                 // LDX
@@ -432,37 +454,60 @@ struct CPU {
                 // ORA
                 case INS_ORA_IM: {
                     A |= FetchByte( Cycles, memory );
-                    ORASetStatus();
+                    SetAStatus();
                 } break;
                 case INS_ORA_ZP: {
                     A |= LoadZeroPage( Cycles, memory );
-                    ORASetStatus();
+                    SetAStatus();
                 } break;
                 case INS_ORA_ZPX: {
                     A |= LoadZeroPageX( Cycles, memory );
-                    ORASetStatus();
+                    SetAStatus();
                 } break;
                 case INS_ORA_ABS: {
                     A |= LoadAbsolute( Cycles, memory );
-                    ORASetStatus();
+                    SetAStatus();
                 } break;
                 case INS_ORA_ABX: {
                     A |= LoadAbsoluteX( Cycles, memory );
-                    ORASetStatus();
+                    SetAStatus();
                 } break;
                 case INS_ORA_ABY: {
                     A |= LoadAbsoluteY( Cycles, memory );
-                    ORASetStatus();
+                    SetAStatus();
                 } break;
                 case INS_ORA_IX: {
                     A |= LoadIndirectX( Cycles, memory );
-                    ORASetStatus();
+                    SetAStatus();
                 } break;
                 case INS_ORA_IY: {
                     A |= LoadIndirectY( Cycles, memory );
-                    ORASetStatus();
+                    SetAStatus();
                 } break;
 
+                // Implied instructions
+                case INS_PHA: {
+                    memory[SP] = A;
+                    SP--;
+                    Cycles -= 2;
+                } break;
+                case INS_PHP: {
+                    Byte status = CombineFlags();
+                    memory[SP] = status;
+                    SP--;
+                    Cycles -= 2;
+                } break;
+                case INS_PLA: {
+                    SP++;
+                    A = memory[SP];    
+                    Cycles -= 3;
+                    SetAStatus();
+                } break;
+                case INS_PLP: {
+                    SP++;
+                    SeparateFlags(memory[SP]);   
+                    Cycles -= 3;
+                } break;
                 case INS_JSR: {
                     Word SubAddr = FetchWord( Cycles, memory );
                     memory.WriteWord( PC - 1, SP, Cycles );
@@ -490,13 +535,15 @@ int main() {
 
     // start - inline cheat code
 
-    // mem[0x0202] = CPU::INS_LSR_ACC;
+    mem[0x0202] = CPU::INS_PHA;
+    mem[0x0203] = CPU::INS_PLP;
 
     // end - inline cheat code
     mem.LoadFile("test.bin");
-    cpu.Execute( 4, mem );
+    cpu.Execute( 9, mem );
 
-    printf("A = %x\n", cpu.A);
+    // printf("A = %x\n", cpu.A);
+    printf("0x%x\n", cpu.CombineFlags());
 
 
     return 0;
