@@ -141,20 +141,9 @@ struct CPU {
     }
 
     // Helper functions
-    void SetAStatus() { // Commonly used with accumulator operations
-        // Set means is value of 1 or True
-        Z = (A == 0); // Set if A = 0
-        N = (A & 0b10000000) > 0; // Set if bit 7 of A is set
-    }
-
-    void LDXSetStatus() {
-        Z = (X == 0);
-        N = (X & 0b10000000) > 0;
-    }
-
-    void LDYSetStatus() {
-        Z = (Y == 0);
-        N = (X & 0b10000000) > 0;
+    void SetGenericStatus( Byte Value ) {
+        Z = (Value == 0); 
+        N = (Value & 0b10000000) > 0; 
     }
 
     void LSRSetStatus( Byte BitZero, Byte result ) {
@@ -163,8 +152,13 @@ struct CPU {
         N = (result & 0b10000000) > 0;
     }
 
-    void ROLSetStatus( Byte OldByte ) {
-        SetAStatus();
+    void ROLSetStatus( Byte EffectedByte, Byte OldByte ) {
+        SetGenericStatus( EffectedByte );
+        C = (OldByte & 0b00000001) > 0;
+    }
+
+    void RORSetStatus( Byte EffectedByte, Byte OldByte ) {
+        SetGenericStatus( EffectedByte );
         C = (OldByte & 0b10000000) > 0;
     }
 
@@ -179,7 +173,15 @@ struct CPU {
         Byte OldByte = Value;
         Value = ( Value << 1 );
         Value |= C; // Could also be +=
-        ROLSetStatus( OldByte );
+        ROLSetStatus( Value, OldByte );
+        Cycles--;
+    }
+
+    void ROR( Byte& Value, u32& Cycles ) { // Handles SetStatus and takes 1 cycle
+        Byte OldByte = Value;
+        Value = ( Value << 1 );
+        Value |= C; // Could also be +=
+        RORSetStatus( Value, OldByte );
         Cycles--;
     }
 
@@ -343,6 +345,13 @@ struct CPU {
         INS_ROL_ABS = 0x2E,
         INS_ROL_ABX = 0x3E,
 
+        // ROR
+        INS_ROR_ACC = 0x6A,
+        INS_ROR_ZP = 0x66,
+        INS_ROR_ZPX = 0x76,
+        INS_ROR_ABS = 0x6E,
+        INS_ROR_ABX = 0x7E,
+
         INS_PHA = 0x48,
         INS_PHP = 0x08,
         INS_PLA = 0x68,
@@ -358,79 +367,79 @@ struct CPU {
                 // LDA
                 case INS_LDA_IM: {
                     A = FetchByte( Cycles, memory );
-                    SetAStatus();
+                    SetGenericStatus( A );
                 } break;
                 case INS_LDA_ZP: {
                     A = LoadZeroPage( Cycles, memory );
-                    SetAStatus();
+                    SetGenericStatus( A );
                 } break;
                 case INS_LDA_ZPX: {
                     A = LoadZeroPageX( Cycles, memory );
-                    SetAStatus();
+                    SetGenericStatus( A );
                 } break;
                 case INS_LDA_ABS: {
                     A = LoadAbsolute( Cycles, memory );
-                    SetAStatus();
+                    SetGenericStatus( A );
                 } break;
                 case INS_LDA_ABX: {
                     A = LoadAbsoluteX( Cycles, memory );
-                    SetAStatus();
+                    SetGenericStatus( A );
                 } break;
                 case INS_LDA_ABY: {
                     A = LoadAbsoluteY( Cycles, memory );
-                    SetAStatus();
+                    SetGenericStatus( A );
                 } break;
                 case INS_LDA_IX: {
                     A = LoadIndirectX( Cycles, memory );
-                    SetAStatus();
+                    SetGenericStatus( A );
                 } break;
                 case INS_LDA_IY: {
                     A = LoadIndirectY( Cycles, memory );
-                    SetAStatus();
+                    SetGenericStatus( A );
                 } break;
 
                 // LDX
                 case INS_LDX_IM: {
                     X = FetchByte( Cycles, memory );
-                    LDXSetStatus();
+                    SetGenericStatus( X );
                 } break;
                 case INS_LDX_ZP: {
                     X = LoadZeroPage( Cycles, memory );
-                    LDXSetStatus();
+                    SetGenericStatus( X );
                 } break;
                 case INS_LDX_ZPY: {
                     X = LoadZeroPageY( Cycles, memory );
-                    LDXSetStatus();
+                    SetGenericStatus( X );
                 } break;
                 case INS_LDX_ABS: {
                     X = LoadAbsolute( Cycles, memory );
-                    LDXSetStatus();
+                    SetGenericStatus( X );
                 } break;
                 case INS_LDX_ABY: {
                     X = LoadAbsoluteY( Cycles, memory, false );
-                    LDXSetStatus();
+                    SetGenericStatus( X );
                 } break;
 
                 // LDY
                 case INS_LDY_IM: {
                     Y = FetchByte( Cycles, memory );
-                    LDYSetStatus();
+                    SetGenericStatus( Y );
                 } break;
                 case INS_LDY_ZP: {
                     Y = LoadZeroPage( Cycles, memory );
-                    LDYSetStatus();
+                    SetGenericStatus( Y );
                 } break;
                 case INS_LDY_ZPX: {
                     Y = LoadZeroPageX( Cycles, memory );
-                    LDYSetStatus();
+                    SetGenericStatus( Y );
                 } break;
                 case INS_LDY_ABS: {
                     Y = LoadAbsolute( Cycles, memory );
-                    LDYSetStatus();
+                    SetGenericStatus( Y );
                 } break;
                 case INS_LDY_ABX: {
                     Y = LoadAbsoluteX( Cycles, memory );
-                    LDYSetStatus();
+                    SetGenericStatus( Y );
                 } break;
 
                 // LSR
@@ -474,35 +483,35 @@ struct CPU {
                 // ORA
                 case INS_ORA_IM: {
                     A |= FetchByte( Cycles, memory );
-                    SetAStatus();
+                    SetGenericStatus( A );
                 } break;
                 case INS_ORA_ZP: {
                     A |= LoadZeroPage( Cycles, memory );
-                    SetAStatus();
+                    SetGenericStatus( A );
                 } break;
                 case INS_ORA_ZPX: {
                     A |= LoadZeroPageX( Cycles, memory );
-                    SetAStatus();
+                    SetGenericStatus( A );
                 } break;
                 case INS_ORA_ABS: {
                     A |= LoadAbsolute( Cycles, memory );
-                    SetAStatus();
+                    SetGenericStatus( A );
                 } break;
                 case INS_ORA_ABX: {
                     A |= LoadAbsoluteX( Cycles, memory );
-                    SetAStatus();
+                    SetGenericStatus( A );
                 } break;
                 case INS_ORA_ABY: {
                     A |= LoadAbsoluteY( Cycles, memory );
-                    SetAStatus();
+                    SetGenericStatus( A );
                 } break;
                 case INS_ORA_IX: {
                     A |= LoadIndirectX( Cycles, memory );
-                    SetAStatus();
+                    SetGenericStatus( A );
                 } break;
                 case INS_ORA_IY: {
                     A |= LoadIndirectY( Cycles, memory );
-                    SetAStatus();
+                    SetGenericStatus( A );
                 } break;
 
                 // ROL
@@ -537,6 +546,39 @@ struct CPU {
                     memory[AbsAddr] = Value;
                     Cycles -= 2;
                 } break;
+
+                // ROR - untested but very similar to ROL
+                case INS_ROR_ACC: {
+                    ROR( A, Cycles );
+                } break;
+                case INS_ROR_ZP: {
+                    Byte ZeroPageAddr;
+                    Byte Value = LoadZeroPage( Cycles, memory, ZeroPageAddr );
+                    ROR( Value, Cycles );
+                    memory[ZeroPageAddr] = Value;
+                    Cycles--;
+                } break;
+                case INS_ROR_ZPX: {
+                    Byte ZeroPageAddr;
+                    Byte Value = LoadZeroPageX( Cycles, memory, ZeroPageAddr );
+                    ROR( Value, Cycles );
+                    memory[ZeroPageAddr] = Value;
+                    Cycles--;
+                } break;
+                case INS_ROR_ABS: {
+                    Word AbsAddr;
+                    Byte Value = LoadAbsolute( Cycles, memory, AbsAddr );
+                    ROR( Value, Cycles );
+                    memory[AbsAddr] = Value;
+                    Cycles--;
+                } break;
+                case INS_ROR_ABX: {
+                    Word AbsAddr;
+                    Byte Value = LoadAbsoluteX( Cycles, memory, AbsAddr, false );
+                    ROR( Value, Cycles );
+                    memory[AbsAddr] = Value;
+                    Cycles -= 2;
+                } break;
                 
 
                 // Implied instructions
@@ -555,7 +597,7 @@ struct CPU {
                     SP++;
                     A = memory[SP];    
                     Cycles -= 3;
-                    SetAStatus();
+                    SetGenericStatus( A );
                 } break;
                 case INS_PLP: {
                     SP++;
