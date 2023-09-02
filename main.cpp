@@ -140,6 +140,7 @@ struct CPU {
         return Data;
     }
 
+
     // Helper functions
     void SetGenericStatus( Byte Value ) {
         Z = (Value == 0); 
@@ -202,6 +203,13 @@ struct CPU {
         C = Sum > 0xFF;
         V = AreSignsSame && ( (A ^ Value) & 0b10000000 ); // I still need to work out how this line works
         SetGenericStatus( A );
+    }
+
+    void ASL( Byte& Value, u32& Cycles ) { // handles flags and takes 1 cycle
+        C = ( Value & 0b10000000 ) > 0;
+        Value = ( Value << 1 );
+        Cycles--;
+        SetGenericStatus( Value );
     }
 
     void CheckPageOverflow( Word Value, Byte Adder, u32& Cycles ) {
@@ -332,6 +340,13 @@ struct CPU {
         INS_AND_ABY = 0x39,
         INS_AND_IX = 0x21,
         INS_AND_IY = 0x31,
+
+        // ASL
+        INS_ASL_ACC = 0x0A,
+        INS_ASL_ZP = 0x06,
+        INS_ASL_ZPX = 0x16,
+        INS_ASL_ABS = 0x0E,
+        INS_ASL_ABX = 0x1E,
 
         // LDA
         INS_LDA_IM = 0xA9,
@@ -478,6 +493,39 @@ struct CPU {
                     Byte Value = LoadIndirectY( Cycles, memory );
                     A &= Value;
                     SetGenericStatus( A );
+                } break;
+
+                // ASL
+                case INS_ASL_ACC: {
+                    ASL( A, Cycles );
+                } break;
+                case INS_ASL_ZP: {
+                    Byte ZeroPageAddr;
+                    Byte Value = LoadZeroPage( Cycles, memory, ZeroPageAddr );
+                    ASL( Value, Cycles );
+                    memory[ZeroPageAddr] = Value;
+                    Cycles--;
+                } break;
+                case INS_ASL_ZPX: {
+                    Byte ZeroPageAddr;
+                    Byte Value = LoadZeroPageX( Cycles, memory, ZeroPageAddr );
+                    ASL( Value, Cycles );
+                    memory[ZeroPageAddr] = Value;
+                    Cycles--;
+                } break;
+                case INS_ASL_ABS: {
+                    Word AbsAddr;
+                    Byte Value = LoadAbsolute( Cycles, memory, AbsAddr );
+                    ASL( Value, Cycles );
+                    memory[AbsAddr] = Value;
+                    Cycles--;
+                } break;
+                case INS_ASL_ABX: {
+                    Word AbsAddr;
+                    Byte Value = LoadAbsoluteX( Cycles, memory, AbsAddr, false );
+                    ASL( Value, Cycles );
+                    memory[AbsAddr] = Value;
+                    Cycles -= 2;
                 } break;
 
                 // LDA
@@ -746,20 +794,21 @@ int main() {
     cpu.Reset( mem );
 
     // start - inline cheat code
+    cpu.X = 0x02;
+    mem[0x6502] = 0xF5;
 
-    // mem[0x0012] = 0xFF;
-    // mem[0x0201] = 0x7F;
-    // mem[0x0202] = CPU::INS_ADC_IM;
-    // mem[0x0203] = 0xFF;
+    mem[0x0200] = CPU::INS_ASL_ABX;
+    mem[0x0201] = 0x00;
+    mem[0x0202] = 0x65;
 
     // end - inline cheat code
-    mem.LoadFile("test.bin");
-    cpu.Execute( 6, mem );
+    // mem.LoadFile("test.bin");
+    cpu.Execute( 7, mem );
 
-    printf("A = %x\n", cpu.A);
-    printf("C = %x\n", cpu.C);
-    printf("V = %x\n", cpu.V);
-    // printf("0x%x\n", mem[0x01FF]);
+    printf("A = 0x%x\n", cpu.A);
+    printf("C = %d\n", cpu.C);
+    printf("V = %d\n", cpu.V);
+    printf("0x%x\n", mem[0x6502]);
 
 
     return 0;
