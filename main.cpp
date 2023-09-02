@@ -424,10 +424,10 @@ struct CPU {
             Byte Ins = FetchByte( Cycles, memory );
 
             // Debug
-            printf("Instruction: 0x%x\n", Ins);
-            // printf("PC: 0x%x\n", PC);
+            printf("Instruction: 0x%x | ", Ins);
+            printf("A: 0x%x | ", A);
             printf("Cycles: %d\n", Cycles);
-            printf("A: 0x%x\n", A);
+            
             
 
 
@@ -764,6 +764,7 @@ struct CPU {
                     if ( !C ) {
                         Cycles--;
                         PC += Offset;
+                        // Check if page is crossed!!!
                     }
                 } break;
                 case INS_PHA: {
