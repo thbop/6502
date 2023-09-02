@@ -323,6 +323,16 @@ struct CPU {
         INS_ADC_IX = 0x61,
         INS_ADC_IY = 0x71,
 
+        // AND
+        INS_AND_IM = 0x29,
+        INS_AND_ZP = 0x25,
+        INS_AND_ZPX = 0x35,
+        INS_AND_ABS = 0x2D,
+        INS_AND_ABX = 0x3D,
+        INS_AND_ABY = 0x39,
+        INS_AND_IX = 0x21,
+        INS_AND_IY = 0x31,
+
         // LDA
         INS_LDA_IM = 0xA9,
         INS_LDA_ZP = 0xA5,
@@ -426,6 +436,48 @@ struct CPU {
                 case INS_ADC_IY: {
                     Byte Value = LoadIndirectY( Cycles, memory );
                     ADC( Value );
+                } break;
+
+                // AND
+                case INS_AND_IM: {
+                    Byte Value = FetchByte( Cycles, memory );
+                    A &= Value;
+                    SetGenericStatus( A );
+                } break;
+                case INS_AND_ZP: {
+                    Byte Value = LoadZeroPage( Cycles, memory );
+                    A &= Value;
+                    SetGenericStatus( A );
+                } break;
+                case INS_AND_ZPX: {
+                    Byte Value = LoadZeroPageX( Cycles, memory );
+                    A &= Value;
+                    SetGenericStatus( A );
+                } break;
+                case INS_AND_ABS: {
+                    Byte Value = LoadAbsolute( Cycles, memory );
+                    A &= Value;
+                    SetGenericStatus( A );
+                } break;
+                case INS_AND_ABX: {
+                    Byte Value = LoadAbsoluteX( Cycles, memory );
+                    A &= Value;
+                    SetGenericStatus( A );
+                } break;
+                case INS_AND_ABY: {
+                    Byte Value = LoadAbsoluteY( Cycles, memory );
+                    A &= Value;
+                    SetGenericStatus( A );
+                } break;
+                case INS_AND_IX: {
+                    Byte Value = LoadIndirectX( Cycles, memory );
+                    A &= Value;
+                    SetGenericStatus( A );
+                } break;
+                case INS_AND_IY: {
+                    Byte Value = LoadIndirectY( Cycles, memory );
+                    A &= Value;
+                    SetGenericStatus( A );
                 } break;
 
                 // LDA
@@ -671,7 +723,7 @@ struct CPU {
                 case INS_JSR: { // Review, not done.
                     Word SubAddr = FetchWord( Cycles, memory );
                     memory.WriteWord( PC - 1, SP, Cycles );
-                    // Increment the Stack Pointer
+                    // Increment the Stack Pointer!
                     Cycles--;
                     PC = SubAddr;
                     Cycles--;
@@ -695,20 +747,19 @@ int main() {
 
     // start - inline cheat code
 
-    mem[0x0200] = CPU::INS_LDA_IM;
-    mem[0x0201] = 0x7F;
-    mem[0x0202] = CPU::INS_ADC_IM;
-    mem[0x0203] = 0xFF;
+    // mem[0x0012] = 0xFF;
+    // mem[0x0201] = 0x7F;
+    // mem[0x0202] = CPU::INS_ADC_IM;
+    // mem[0x0203] = 0xFF;
 
     // end - inline cheat code
-    // mem.LoadFile("test.bin");
-    cpu.Execute( 4, mem );
+    mem.LoadFile("test.bin");
+    cpu.Execute( 6, mem );
 
     printf("A = %x\n", cpu.A);
     printf("C = %x\n", cpu.C);
     printf("V = %x\n", cpu.V);
     // printf("0x%x\n", mem[0x01FF]);
-
 
 
     return 0;

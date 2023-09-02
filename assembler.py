@@ -33,7 +33,9 @@ address_mode_opcodes = {
         'lda': 'A9',
         'ldx': 'A2',
         'ldy': 'A0',
-        'ora': '09'
+        'ora': '09',
+        'adc': '69',
+        'and': '29'
     },
     'ZP': {
         'lda': 'A5',
@@ -42,7 +44,9 @@ address_mode_opcodes = {
         'lsr': '46',
         'ora': '05',
         'rol': '26',
-        'ror': '66'
+        'ror': '66',
+        'adc': '65',
+        'and': '25'
     },
     'ZPX': {
         'lda': 'B5',
@@ -50,7 +54,9 @@ address_mode_opcodes = {
         'lsr': '56',
         'ora': '15',
         'rol': '36',
-        'ror': '76'
+        'ror': '76',
+        'adc': '75',
+        'and': '35'
     },
     'ZPY': {
         'ldx':'B6'
@@ -62,7 +68,9 @@ address_mode_opcodes = {
         'lsr': '4E',
         'ora': '0D',
         'rol': '2E',
-        'ror': '6E'
+        'ror': '6E',
+        'adc': '6D',
+        'and': '2D'
     },
     'ABX': {
         'lda':'BD',
@@ -70,12 +78,15 @@ address_mode_opcodes = {
         'lsr': '5E',
         'ora': '1D',
         'rol': '3E',
-        'ror': '7E'
+        'ror': '7E',
+        'adc': '7D',
+        'and': '3D'
     },
     'ABY': {
         'lda': 'B9',
         'ldx':'BE',
-        'ora': '19'
+        'ora': '19',
+        'and': '39'
     }
 }
 
