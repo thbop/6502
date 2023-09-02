@@ -26,7 +26,8 @@ address_mode_opcodes = {
         'php': '08',
         'pla': '68',
         'plp': '28',
-        'rol': '2A'
+        'rol': '2A',
+        'ror': '6A'
     },
     'IM': {
         'lda': 'A9',
@@ -40,14 +41,16 @@ address_mode_opcodes = {
         'ldy': 'A4',
         'lsr': '46',
         'ora': '05',
-        'rol': '26'
+        'rol': '26',
+        'ror': '66'
     },
     'ZPX': {
         'lda': 'B5',
         'ldy': 'B4',
         'lsr': '56',
         'ora': '15',
-        'rol': '36'
+        'rol': '36',
+        'ror': '76'
     },
     'ZPY': {
         'ldx':'B6'
@@ -58,14 +61,16 @@ address_mode_opcodes = {
         'ldy': 'AC',
         'lsr': '4E',
         'ora': '0D',
-        'rol': '2E'
+        'rol': '2E',
+        'ror': '6E'
     },
     'ABX': {
         'lda':'BD',
         'ldy': 'BC',
         'lsr': '5E',
         'ora': '1D',
-        'rol': '3E'
+        'rol': '3E',
+        'ror': '7E'
     },
     'ABY': {
         'lda': 'B9',

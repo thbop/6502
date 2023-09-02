@@ -185,6 +185,25 @@ struct CPU {
         Cycles--;
     }
 
+    void ADC( Byte Value ) { // Takes 0 cycles and sets status
+        /*
+            Code adapted from: https://github.com/davepoo/6502Emulator/blob/master/6502/6502Lib/src/private/m6502.cpp
+            Negative numbers https://stackoverflow.com/questions/45397461/are-the-bytes-stored-in-6502-memory-signed-or-unsigned
+                $80 | $FF = -128 | -1
+                $00 | $7F =   0  | 127
+        */
+        const bool AreSignsSame = !( (A ^ Value) & 0b10000000 );
+
+        Word Sum = A;
+        Sum += Value + C;
+        A = ( Sum & 0xFF );
+                    
+        // Flag set
+        C = Sum > 0xFF;
+        V = AreSignsSame && ( (A ^ Value) & 0b10000000 ); // I still need to work out how this line works
+        SetGenericStatus( A );
+    }
+
     void CheckPageOverflow( Word Value, Byte Adder, u32& Cycles ) {
         Value &= 0x00FF;
         Value += Adder;
@@ -294,6 +313,16 @@ struct CPU {
 
     // opcodes
     static constexpr Byte
+        // ADC
+        INS_ADC_IM = 0x69,
+        INS_ADC_ZP = 0x65,
+        INS_ADC_ZPX = 0x75,
+        INS_ADC_ABS = 0x6D,
+        INS_ADC_ABX = 0x7D,
+        INS_ADC_ABY = 0x79,
+        INS_ADC_IX = 0x61,
+        INS_ADC_IY = 0x71,
+
         // LDA
         INS_LDA_IM = 0xA9,
         INS_LDA_ZP = 0xA5,
@@ -352,6 +381,7 @@ struct CPU {
         INS_ROR_ABS = 0x6E,
         INS_ROR_ABX = 0x7E,
 
+        // Implied
         INS_PHA = 0x48,
         INS_PHP = 0x08,
         INS_PLA = 0x68,
@@ -364,6 +394,40 @@ struct CPU {
             printf("Instruction: 0x%x\n", Ins);
 
             switch( Ins ) {
+                // ADC
+                case INS_ADC_IM: {
+                    Byte Value = FetchByte( Cycles, memory );
+                    ADC( Value );
+                } break;
+                case INS_ADC_ZP: {
+                    Byte Value = LoadZeroPage( Cycles, memory );
+                    ADC( Value );
+                } break;
+                case INS_ADC_ZPX: {
+                    Byte Value = LoadZeroPageX( Cycles, memory );
+                    ADC( Value );
+                } break;
+                case INS_ADC_ABS: {
+                    Byte Value = LoadAbsolute( Cycles, memory );
+                    ADC( Value );
+                } break;
+                case INS_ADC_ABX: {
+                    Byte Value = LoadAbsoluteX( Cycles, memory );
+                    ADC( Value );
+                } break;
+                case INS_ADC_ABY: {
+                    Byte Value = LoadAbsoluteY( Cycles, memory );
+                    ADC( Value );
+                } break;
+                case INS_ADC_IX: {
+                    Byte Value = LoadIndirectX( Cycles, memory );
+                    ADC( Value );
+                } break;
+                case INS_ADC_IY: {
+                    Byte Value = LoadIndirectY( Cycles, memory );
+                    ADC( Value );
+                } break;
+
                 // LDA
                 case INS_LDA_IM: {
                     A = FetchByte( Cycles, memory );
@@ -604,7 +668,7 @@ struct CPU {
                     SeparateFlags(memory[SP]);   
                     Cycles -= 3;
                 } break;
-                case INS_JSR: {
+                case INS_JSR: { // Review, not done.
                     Word SubAddr = FetchWord( Cycles, memory );
                     memory.WriteWord( PC - 1, SP, Cycles );
                     // Increment the Stack Pointer
@@ -631,18 +695,20 @@ int main() {
 
     // start - inline cheat code
 
-    // mem[0x0200] = CPU::INS_LDA_IM;
-    // mem[0x0201] = 0b00000001;
-    // mem[0x0202] = CPU::INS_ROL_ACC;
-
-    mem[0x6502] = 0x65;
+    mem[0x0200] = CPU::INS_LDA_IM;
+    mem[0x0201] = 0x7F;
+    mem[0x0202] = CPU::INS_ADC_IM;
+    mem[0x0203] = 0xFF;
 
     // end - inline cheat code
-    mem.LoadFile("test.bin");
-    cpu.Execute( 9, mem );
+    // mem.LoadFile("test.bin");
+    cpu.Execute( 4, mem );
 
     printf("A = %x\n", cpu.A);
-    printf("0x%x\n", mem[0x01FF]);
+    printf("C = %x\n", cpu.C);
+    printf("V = %x\n", cpu.V);
+    // printf("0x%x\n", mem[0x01FF]);
+
 
 
     return 0;
