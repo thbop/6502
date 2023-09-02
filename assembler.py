@@ -30,13 +30,14 @@ address_mode_opcodes = {
         'ror': '6A',
         'asl': '0A'
     },
-    'IM': {
+    'IM': { # Or relative
         'lda': 'A9',
         'ldx': 'A2',
         'ldy': 'A0',
         'ora': '09',
         'adc': '69',
-        'and': '29'
+        'and': '29',
+        'bcc': '90'
     },
     'ZP': {
         'lda': 'A5',

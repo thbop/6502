@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-
+using SByte = char; // Signed Byte
 using Byte = unsigned char; // 8 bit, FF
 using Word = unsigned short; // 16 bit, FFFF
 
@@ -96,11 +96,14 @@ struct CPU {
     }
 
     // Fetch, Read, Write
-    Byte FetchByte( u32& Cycles, Mem& memory ) {
+    Byte FetchByte( u32& Cycles, Mem& memory, bool IncrementPC = true ) {
         Byte Data = memory[PC];
-        PC++;
+        if ( IncrementPC ) { PC++; }
         Cycles--;
         return Data;
+    }
+    SByte FetchSByte( u32& Cycles, Mem& memory, bool IncrementPC = true ) {
+        return FetchByte( Cycles, memory, IncrementPC );
     }
 
     Word FetchWord( u32& Cycles, Mem& memory ) {
@@ -407,6 +410,8 @@ struct CPU {
         INS_ROR_ABX = 0x7E,
 
         // Implied
+        INS_BCC = 0x90,
+        INS_BCS = 0xB0,
         INS_PHA = 0x48,
         INS_PHP = 0x08,
         INS_PLA = 0x68,
@@ -414,9 +419,17 @@ struct CPU {
         INS_JSR = 0x20;
 
     void Execute( u32 Cycles, Mem& memory ) {
-        while (Cycles > 0) {
+        while ((int)Cycles > 0) {
+            printf("PC: 0x%x | ", PC);
             Byte Ins = FetchByte( Cycles, memory );
+
+            // Debug
             printf("Instruction: 0x%x\n", Ins);
+            // printf("PC: 0x%x\n", PC);
+            printf("Cycles: %d\n", Cycles);
+            printf("A: 0x%x\n", A);
+            
+
 
             switch( Ins ) {
                 // ADC
@@ -746,6 +759,13 @@ struct CPU {
                 
 
                 // Implied instructions
+                case INS_BCC: {
+                    SByte Offset = FetchSByte( Cycles, memory, false );
+                    if ( !C ) {
+                        Cycles--;
+                        PC += Offset;
+                    }
+                } break;
                 case INS_PHA: {
                     memory[SP] = A;
                     SP--;
@@ -786,29 +806,31 @@ struct CPU {
 };
 
 
+
 int main() {
     Mem mem;
-
-
     CPU cpu;
     cpu.Reset( mem );
 
     // start - inline cheat code
-    cpu.X = 0x02;
-    mem[0x6502] = 0xF5;
+    // cpu.X = 0x02;
+    // mem[0x0200] = 0x7f;
 
-    mem[0x0200] = CPU::INS_ASL_ABX;
-    mem[0x0201] = 0x00;
-    mem[0x0202] = 0x65;
+    // mem[0x0200] = CPU::INS_ASL_ABX;
+    // mem[0x0201] = 0x00;
+    // mem[0x0202] = 0x65;
 
     // end - inline cheat code
-    // mem.LoadFile("test.bin");
-    cpu.Execute( 7, mem );
+    mem.LoadFile("test.bin");
+    cpu.Execute( 50, mem );
 
     printf("A = 0x%x\n", cpu.A);
     printf("C = %d\n", cpu.C);
     printf("V = %d\n", cpu.V);
-    printf("0x%x\n", mem[0x6502]);
+    // printf("0x%x\n", mem[0x6502]);
+
+    // SByte a = 0xFC;
+    // printf("%d\n", a);
 
 
     return 0;
