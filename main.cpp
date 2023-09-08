@@ -763,8 +763,24 @@ struct CPU {
                     SByte Offset = FetchSByte( Cycles, memory, false );
                     if ( !C ) {
                         Cycles--;
+                        Word OldPC = PC;
                         PC += Offset;
-                        // Check if page is crossed!!!
+                        // Check if page is crossed
+                        if ( ( PC & 0xFF00 ) > ( OldPC & 0xFF00 ) ) {
+                            Cycles -= 2;
+                        }
+                    }
+                } break;
+                case INS_BCS: {
+                    SByte Offset = FetchSByte( Cycles, memory, false );
+                    if ( C ) {
+                        Cycles--;
+                        Word OldPC = PC;
+                        PC += Offset;
+                        // Check if page is crossed
+                        if ( ( PC & 0xFF00 ) > ( OldPC & 0xFF00 ) ) {
+                            Cycles -= 2;
+                        }
                     }
                 } break;
                 case INS_PHA: {
@@ -799,7 +815,7 @@ struct CPU {
                 } break;
 
                 default: {
-                    printf("Instruction not handled $%x\n", Ins);
+                    printf("Instruction not handled 0x%x\n", Ins);
                 } break;
             }
         }
@@ -823,14 +839,14 @@ int main() {
 
     // end - inline cheat code
     mem.LoadFile("test.bin");
-    cpu.Execute( 50, mem );
+    cpu.Execute( 41, mem );
 
     printf("A = 0x%x\n", cpu.A);
     printf("C = %d\n", cpu.C);
     printf("V = %d\n", cpu.V);
     // printf("0x%x\n", mem[0x6502]);
 
-    // SByte a = 0xFC;
+    // SByte a = 0xFD;
     // printf("%d\n", a);
 
 
