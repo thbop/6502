@@ -770,6 +770,7 @@ struct CPU {
                             Cycles -= 2;
                         }
                     }
+                    else { PC++; }
                 } break;
                 case INS_BCS: {
                     SByte Offset = FetchSByte( Cycles, memory, false );
@@ -782,6 +783,7 @@ struct CPU {
                             Cycles -= 2;
                         }
                     }
+                    else { PC++; }
                 } break;
                 case INS_PHA: {
                     memory[SP] = A;
@@ -839,7 +841,7 @@ int main() {
 
     // end - inline cheat code
     mem.LoadFile("test.bin");
-    cpu.Execute( 41, mem );
+    cpu.Execute( 44, mem );
 
     printf("A = 0x%x\n", cpu.A);
     printf("C = %d\n", cpu.C);
