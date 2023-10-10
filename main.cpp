@@ -166,6 +166,12 @@ struct CPU {
         C = (OldByte & 0b10000000) > 0;
     }
 
+    void BITSsetStatus( Byte Value ) {
+        Z = !(Value & A);
+        V = ( 0b01000000 & Value ) > 0;
+        N = ( 0b10000000 & Value ) > 0;
+    }
+
     void LSR( Byte& Value, u32& Cycles ) { // Handles SetStatus and takes 1 cycle
         Byte BitZero = (0b00000001 & Value);
         Value = (Value >> 1);
@@ -344,6 +350,11 @@ struct CPU {
         INS_AND_IX = 0x21,
         INS_AND_IY = 0x31,
 
+        // Branch
+        INS_BCC = 0x90,
+        INS_BCS = 0xB0,
+        INS_BEQ = 0xF0,
+
         // ASL
         INS_ASL_ACC = 0x0A,
         INS_ASL_ZP = 0x06,
@@ -409,9 +420,11 @@ struct CPU {
         INS_ROR_ABS = 0x6E,
         INS_ROR_ABX = 0x7E,
 
+        // BIT
+        INS_BIT_ZP = 0x24,
+        INS_BIT_ABS = 0x2C,
+
         // Implied
-        INS_BCC = 0x90,
-        INS_BCS = 0xB0,
         INS_PHA = 0x48,
         INS_PHP = 0x08,
         INS_PLA = 0x68,
@@ -539,6 +552,58 @@ struct CPU {
                     ASL( Value, Cycles );
                     memory[AbsAddr] = Value;
                     Cycles -= 2;
+                } break;
+
+                // Branch
+                case INS_BCC: {
+                    SByte Offset = FetchSByte( Cycles, memory, false );
+                    if ( !C ) {
+                        Cycles--;
+                        Word OldPC = PC;
+                        PC += Offset;
+                        // Check if page is crossed
+                        if ( ( PC & 0xFF00 ) > ( OldPC & 0xFF00 ) ) {
+                            Cycles -= 2;
+                        }
+                    }
+                    else { PC++; } // Increment PC if failure, otherwise it tries to parse argument as instruction
+                } break;
+                case INS_BCS: {
+                    SByte Offset = FetchSByte( Cycles, memory, false );
+                    if ( C ) {
+                        Cycles--;
+                        Word OldPC = PC;
+                        PC += Offset;
+                        // Check if page is crossed
+                        if ( ( PC & 0xFF00 ) > ( OldPC & 0xFF00 ) ) {
+                            Cycles -= 2;
+                        }
+                    }
+                    else { PC++; }
+                } break;
+                case INS_BEQ: {
+                    SByte Offset = FetchSByte( Cycles, memory, false );
+                    if ( Z ) {
+                        Cycles--;
+                        Word OldPC = PC;
+                        PC += Offset;
+                        // Check if page is crossed
+                        if ( ( PC & 0xFF00 ) > ( OldPC & 0xFF00 ) ) {
+                            Cycles -= 2;
+                        }
+                    }
+                    else { PC++; }
+                } break;
+
+
+                // BIT
+                case INS_BIT_ZP: {
+                    Byte Value = LoadZeroPage( Cycles, memory );
+                    BITSsetStatus( Value );
+                } break;
+                case INS_BIT_ABS: {
+                    Byte Value = LoadAbsolute( Cycles, memory );
+                    BITSsetStatus( Value );
                 } break;
 
                 // LDA
@@ -756,35 +821,9 @@ struct CPU {
                     memory[AbsAddr] = Value;
                     Cycles -= 2;
                 } break;
-                
 
+                
                 // Implied instructions
-                case INS_BCC: {
-                    SByte Offset = FetchSByte( Cycles, memory, false );
-                    if ( !C ) {
-                        Cycles--;
-                        Word OldPC = PC;
-                        PC += Offset;
-                        // Check if page is crossed
-                        if ( ( PC & 0xFF00 ) > ( OldPC & 0xFF00 ) ) {
-                            Cycles -= 2;
-                        }
-                    }
-                    else { PC++; }
-                } break;
-                case INS_BCS: {
-                    SByte Offset = FetchSByte( Cycles, memory, false );
-                    if ( C ) {
-                        Cycles--;
-                        Word OldPC = PC;
-                        PC += Offset;
-                        // Check if page is crossed
-                        if ( ( PC & 0xFF00 ) > ( OldPC & 0xFF00 ) ) {
-                            Cycles -= 2;
-                        }
-                    }
-                    else { PC++; }
-                } break;
                 case INS_PHA: {
                     memory[SP] = A;
                     SP--;
@@ -833,7 +872,8 @@ int main() {
 
     // start - inline cheat code
     // cpu.X = 0x02;
-    // mem[0x0200] = 0x7f;
+    mem[0x0012] = 0b11100101;
+    
 
     // mem[0x0200] = CPU::INS_ASL_ABX;
     // mem[0x0201] = 0x00;
@@ -841,11 +881,16 @@ int main() {
 
     // end - inline cheat code
     mem.LoadFile("test.bin");
-    cpu.Execute( 44, mem );
+    cpu.Execute( 10, mem );
 
     printf("A = 0x%x\n", cpu.A);
     printf("C = %d\n", cpu.C);
+    printf("Z = %d\n", cpu.Z);
+    printf("I = %d\n", cpu.I);
+    printf("D = %d\n", cpu.D);
+    printf("B = %d\n", cpu.B);
     printf("V = %d\n", cpu.V);
+    printf("N = %d\n", cpu.N);
     // printf("0x%x\n", mem[0x6502]);
 
     // SByte a = 0xFD;

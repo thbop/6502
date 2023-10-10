@@ -37,7 +37,8 @@ address_mode_opcodes = {
         'ora': '09',
         'adc': '69',
         'and': '29',
-        'bcc': '90'
+        'bcc': '90',
+        'beq': 'F0'
     },
     'ZP': {
         'lda': 'A5',
@@ -49,7 +50,8 @@ address_mode_opcodes = {
         'ror': '66',
         'adc': '65',
         'and': '25',
-        'asl': '06'
+        'asl': '06',
+        'bit': '24'
     },
     'ZPX': {
         'lda': 'B5',
@@ -75,7 +77,8 @@ address_mode_opcodes = {
         'ror': '6E',
         'adc': '6D',
         'and': '2D',
-        'asl': '0E'
+        'asl': '0E',
+        'bit': '2C'
     },
     'ABX': {
         'lda':'BD',
