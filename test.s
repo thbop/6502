@@ -1,31 +1,30 @@
 ; A little test program for my custom 6502 assembler
 
+; START pseudocode
 
-; I{10} = 0
-; J{11} = 0
-; K{12} = F0{unsigned}
-; loop 16ish times
-;   I++
-;   J++
-;   K++
+; 1, 1, 2, 3, 5, 8, 13
+; A{10} = 0
+; B{11} = 1
+; I{12} = 0
 
-STA $10 ; var I
-STA $11 ; var J
+; loop
+; I = A
+; A = B
+; B += I
 
-LDA #F0
-STA $12 ; var K = F0
+; END pseudocode
+
+LDA #01
+STA $11 ; B = 1
 
 ; loop
 LDA $10
-ADC #01
-STA $10 ; var I
+STA $12 ; I = A
 
 LDA $11
-ADC #01
-STA $11 ; var J
+STA $10 ; A = B
 
-LDA $12
-ADC #01
-STA $12 ; var K
+ADC $12
+STA $11 ; B += I
 
-BCC #ED ; -19
+BCC #F3

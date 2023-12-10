@@ -446,18 +446,18 @@ struct CPU {
         INS_PLP = 0x28,
         INS_JSR = 0x20;
 
-    void Execute( u32 Cycles, Mem& memory ) {
+    void Execute( u32 Cycles, Mem& memory, bool debug ) {
         while ((int)Cycles > 0) {
             printf("PC: 0x%x | ", PC);
             Byte Ins = FetchByte( Cycles, memory );
 
             // Debug
-            printf("Instruction: 0x%x | ", Ins);
-            printf("A: 0x%x | ", A);
-            printf("Cycles: %d\n", Cycles);
+            if (debug) {
+                printf("Instruction: 0x%x | ", Ins);
+                printf("A: 0x%x | ", A);
+                printf("Cycles: %d\n", Cycles);
+            }
             
-            
-
 
             switch( Ins ) {
                 // ADC
@@ -901,7 +901,7 @@ int main() {
 
     // end - inline cheat code
     mem.LoadFile("test.bin");
-    cpu.Execute( 500, mem );
+    cpu.Execute( 500, mem, true );
 
     printf("A = 0x%x\n", cpu.A);
     printf("C = %d\n", cpu.C);
@@ -916,7 +916,7 @@ int main() {
     printf("0x%x\n", mem[0x11]);
     printf("0x%x\n", mem[0x12]);
 
-    // Byte a = -19;
+    // Byte a = -13;
     // printf("%x\n", a);
 
 
