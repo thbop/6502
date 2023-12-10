@@ -51,7 +51,8 @@ address_mode_opcodes = {
         'adc': '65',
         'and': '25',
         'asl': '06',
-        'bit': '24'
+        'bit': '24',
+        'sta': '85'
     },
     'ZPX': {
         'lda': 'B5',
@@ -62,7 +63,8 @@ address_mode_opcodes = {
         'ror': '76',
         'adc': '75',
         'and': '35',
-        'asl': '16'
+        'asl': '16',
+        'sta': '95'
     },
     'ZPY': {
         'ldx':'B6'
@@ -78,7 +80,8 @@ address_mode_opcodes = {
         'adc': '6D',
         'and': '2D',
         'asl': '0E',
-        'bit': '2C'
+        'bit': '2C',
+        'sta': '8D'
     },
     'ABX': {
         'lda':'BD',
@@ -89,7 +92,8 @@ address_mode_opcodes = {
         'ror': '7E',
         'adc': '7D',
         'and': '3D',
-        'asl': '1E'
+        'asl': '1E',
+        'sta': '99'
     },
     'ABY': {
         'lda': 'B9',

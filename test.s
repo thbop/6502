@@ -1,4 +1,6 @@
 ; A little test program for my custom 6502 assembler
 
-lda #5a
-bit $12
+
+LDA #00 ; 2
+ADC #01 ; 2
+BCC #FD ;

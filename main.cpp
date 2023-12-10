@@ -256,6 +256,12 @@ struct CPU {
         ZeroPageAddr = FetchByte( Cycles, memory );
         return ReadByte( ZeroPageAddr, Cycles, memory );
     }
+
+    void WriteZeroPage( u32& Cycles, Mem& memory ) { // 2 cycles
+        Byte ZeroPageAddr = FetchByte( Cycles, memory );
+        memory[ZeroPageAddr] = A;
+        Cycles--;
+    }
     
     Byte LoadZeroPageX( u32& Cycles, Mem& memory ) { // 3 cycles
         Byte ZeroPageAddr = FetchByte( Cycles, memory );
@@ -419,6 +425,15 @@ struct CPU {
         INS_ROR_ZPX = 0x76,
         INS_ROR_ABS = 0x6E,
         INS_ROR_ABX = 0x7E,
+
+        // STA
+        INS_STA_ZP = 0x85,
+        INS_STA_ZPX = 0x95,
+        INS_STA_ABS = 0x8D,
+        INS_STA_ABX = 0x9D,
+        INS_STA_ABY = 0x99,
+        INS_STA_IX = 0x81,
+        INS_STA_IY = 0x91,
 
         // BIT
         INS_BIT_ZP = 0x24,
@@ -822,6 +837,11 @@ struct CPU {
                     Cycles -= 2;
                 } break;
 
+                // STA
+                case INS_STA_ZP: { // None of the these affect flags
+                    WriteZeroPage( Cycles, memory );
+                } break;
+
                 
                 // Implied instructions
                 case INS_PHA: {
@@ -872,7 +892,7 @@ int main() {
 
     // start - inline cheat code
     // cpu.X = 0x02;
-    mem[0x0012] = 0b11100101;
+    // mem[0x0012] = 0b11100101;
     
 
     // mem[0x0200] = CPU::INS_ASL_ABX;
@@ -881,7 +901,7 @@ int main() {
 
     // end - inline cheat code
     mem.LoadFile("test.bin");
-    cpu.Execute( 10, mem );
+    cpu.Execute( 1000, mem );
 
     printf("A = 0x%x\n", cpu.A);
     printf("C = %d\n", cpu.C);
