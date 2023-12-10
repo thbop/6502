@@ -901,7 +901,7 @@ int main() {
 
     // end - inline cheat code
     mem.LoadFile("test.bin");
-    cpu.Execute( 1000, mem );
+    cpu.Execute( 500, mem );
 
     printf("A = 0x%x\n", cpu.A);
     printf("C = %d\n", cpu.C);
@@ -911,10 +911,13 @@ int main() {
     printf("B = %d\n", cpu.B);
     printf("V = %d\n", cpu.V);
     printf("N = %d\n", cpu.N);
-    // printf("0x%x\n", mem[0x6502]);
 
-    // SByte a = 0xFD;
-    // printf("%d\n", a);
+    printf("0x%x\n", mem[0x10]);
+    printf("0x%x\n", mem[0x11]);
+    printf("0x%x\n", mem[0x12]);
+
+    // Byte a = -19;
+    // printf("%x\n", a);
 
 
     return 0;
