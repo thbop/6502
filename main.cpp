@@ -1,5 +1,4 @@
 /*
-    All of this code was typed by Thbop
     References:
         1. The initial inspiration and reference for this project was provided by Dave Poo's video:
         https://youtu.be/qJgsuQoy9bc
@@ -16,6 +15,7 @@ using Byte = unsigned char; // 8 bit, FF
 using Word = unsigned short; // 16 bit, FFFF
 
 using u32 = unsigned int;
+
 
 struct Mem {
     static constexpr u32 MAX_MEM = 1024 * 64;
@@ -278,6 +278,12 @@ struct CPU {
         return ReadByte( ZeroPageAddr, Cycles, memory );
     }
 
+    void WriteZeroPageX( u32& Cycles, Mem& memory ) { // 3 cycles - untested
+        Byte ZeroPageAddr = FetchByte( Cycles, memory ) + X;
+        memory[ZeroPageAddr] = A;
+        Cycles -= 2;
+    }
+
     Byte LoadZeroPageY( u32& Cycles, Mem& memory ) { // 3 cycles
         Byte ZeroPageAddr = FetchByte( Cycles, memory );
         ZeroPageAddr += Y; // Wraps around the Zero Page
@@ -295,6 +301,12 @@ struct CPU {
         return ReadByte( AbsAddr, Cycles, memory );
     }
 
+    void WriteAbsolute( u32& Cycles, Mem& memory ) { // 3 cycles
+        Word AbsAddr = FetchWord( Cycles, memory );
+        memory[AbsAddr] = A;
+        Cycles--;
+    }
+
     Byte LoadAbsoluteX( u32& Cycles, Mem& memory, bool PageCrossable=true ) { // 3-4 cycles
         Word AbsAddr = FetchWord( Cycles, memory );
         AbsAddr += X;
@@ -308,11 +320,23 @@ struct CPU {
         return ReadByte( AbsAddr, Cycles, memory );
     }
 
+    void WriteAbsoluteX( u32& Cycles, Mem& memory ) { // 4 cycles - untested
+        Word AbsAddr = FetchWord( Cycles, memory ) + X;
+        memory[AbsAddr] = A;
+        Cycles -= 2;
+    }
+
     Byte LoadAbsoluteY( u32& Cycles, Mem& memory, bool PageCrossable=true ) { // 3-4 cycles
         Word AbsAddr = FetchWord( Cycles, memory );
         AbsAddr += Y;
         if (PageCrossable) { CheckPageOverflow( AbsAddr, Y, Cycles ); }
         return ReadByte( AbsAddr, Cycles, memory );
+    }
+
+    void WriteAbsoluteY( u32& Cycles, Mem& memory ) { // 4 cycles - untested
+        Word AbsAddr = FetchWord( Cycles, memory ) + Y;
+        memory[AbsAddr] = A;
+        Cycles -= 2;
     }
 
     Byte LoadIndirectX( u32& Cycles, Mem& memory ) { // 5 cycles
@@ -324,6 +348,14 @@ struct CPU {
         return ReadByte( TargetAddr, Cycles, memory );
     }
 
+    void WriteIndirectX( u32& Cycles, Mem& memory ) { // 5 cycles - untested
+        Byte ZeroPageAddr = FetchWord( Cycles, memory ) + X;
+        Word TargetAddr = ReadWord( ZeroPageAddr, Cycles, memory );
+        memory[TargetAddr] = A;
+
+        Cycles--;
+    }
+
     Byte LoadIndirectY( u32& Cycles, Mem& memory ) { // 4-5 cycles
         Byte ZeroPageAddr = FetchByte( Cycles, memory );
 
@@ -332,6 +364,14 @@ struct CPU {
         TargetAddr += Y;
                     
         return ReadByte( TargetAddr, Cycles, memory );
+    }
+
+    void WriteIndirectY( u32& Cycles, Mem& memory ) { // 5 cycles - untested
+        Byte ZeroPageAddr = FetchWord( Cycles, memory );
+        Word TargetAddr = ReadWord( ZeroPageAddr, Cycles, memory ) + Y;
+        memory[TargetAddr] = A;
+
+        Cycles--;
     }
 
     // opcodes
@@ -841,6 +881,24 @@ struct CPU {
                 case INS_STA_ZP: { // None of the these affect flags
                     WriteZeroPage( Cycles, memory );
                 } break;
+                case INS_STA_ZPX: {
+                    WriteZeroPageX( Cycles, memory );
+                } break;
+                case INS_STA_ABS: {
+                    WriteAbsolute( Cycles, memory );
+                } break;
+                case INS_STA_ABX: {
+                    WriteAbsoluteX( Cycles, memory );
+                } break;
+                case INS_STA_ABY: {
+                    WriteAbsoluteY( Cycles, memory );
+                } break;
+                case INS_STA_IX: {
+                    WriteIndirectX( Cycles, memory );
+                } break;
+                case INS_STA_IY: {
+                    WriteIndirectY( Cycles, memory );
+                } break;
 
                 
                 // Implied instructions
@@ -912,7 +970,7 @@ int main() {
     printf("V = %d\n", cpu.V);
     printf("N = %d\n", cpu.N);
 
-    printf("0x%x\n", mem[0x10]);
+    printf("0x%x\n", mem[0x4545]);
     printf("0x%x\n", mem[0x11]);
     printf("0x%x\n", mem[0x12]);
 
