@@ -17,12 +17,27 @@ using Word = unsigned short; // 16 bit, FFFF
 using u32 = unsigned int;
 
 
+struct Printer {
+    // A digital printer that outputs a specific memory address to a file.
+    FILE *fp = fopen("printer.txt", "a");
+
+    void Print( Byte Value ) {
+        fprintf(fp, "%d\n", Value);
+    }
+
+    void PowerOff() {
+        fclose(fp);
+    }
+    
+};
+
 struct Mem {
     static constexpr u32 MAX_MEM = 1024 * 64;
     /*
         $0000 - $00FF (256): ZERO PAGE - Fast memory like registers
         $0100 - $01FF (256): System stack
-        $0200 - $FFF9 (65018): Regular RAM
+        $0200 - $FFF8 (65017): Regular RAM
+        $FFF9            : Printer address
         $FFFA - $FFFF (6): Other stuff. *2 /architecture.html
     */
     Byte Data[MAX_MEM];
@@ -301,10 +316,15 @@ struct CPU {
         return ReadByte( AbsAddr, Cycles, memory );
     }
 
-    void WriteAbsolute( u32& Cycles, Mem& memory ) { // 3 cycles
+    void WriteAbsolute( u32& Cycles, Mem& memory, Printer& printer ) { // 3 cycles
         Word AbsAddr = FetchWord( Cycles, memory );
         memory[AbsAddr] = A;
         Cycles--;
+
+        // Printer stuff; not very realistic but still funny
+        if (AbsAddr == 0xFFF9) {
+            printer.Print(A);
+        }
     }
 
     Byte LoadAbsoluteX( u32& Cycles, Mem& memory, bool PageCrossable=true ) { // 3-4 cycles
@@ -486,7 +506,7 @@ struct CPU {
         INS_PLP = 0x28,
         INS_JSR = 0x20;
 
-    void Execute( u32 Cycles, Mem& memory, bool debug ) {
+    void Execute( u32 Cycles, Mem& memory, Printer& printer, bool debug ) {
         while ((int)Cycles > 0) {
             printf("PC: 0x%x | ", PC);
             Byte Ins = FetchByte( Cycles, memory );
@@ -885,7 +905,7 @@ struct CPU {
                     WriteZeroPageX( Cycles, memory );
                 } break;
                 case INS_STA_ABS: {
-                    WriteAbsolute( Cycles, memory );
+                    WriteAbsolute( Cycles, memory, printer );
                 } break;
                 case INS_STA_ABX: {
                     WriteAbsoluteX( Cycles, memory );
@@ -946,6 +966,7 @@ struct CPU {
 int main() {
     Mem mem;
     CPU cpu;
+    Printer printer;
     cpu.Reset( mem );
 
     // start - inline cheat code
@@ -959,7 +980,7 @@ int main() {
 
     // end - inline cheat code
     mem.LoadFile("test.bin");
-    cpu.Execute( 500, mem, true );
+    cpu.Execute( 500, mem, printer, true );
 
     printf("A = 0x%x\n", cpu.A);
     printf("C = %d\n", cpu.C);
@@ -970,13 +991,14 @@ int main() {
     printf("V = %d\n", cpu.V);
     printf("N = %d\n", cpu.N);
 
-    printf("0x%x\n", mem[0x4545]);
+    printf("0x%x\n", mem[0x10]);
     printf("0x%x\n", mem[0x11]);
     printf("0x%x\n", mem[0x12]);
 
-    // Byte a = -13;
+    // Byte a = -16;
     // printf("%x\n", a);
 
+    printer.PowerOff();
 
     return 0;
 }
