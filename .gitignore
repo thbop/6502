@@ -1,3 +1,6 @@
 *.exe
 .vscode
 run.bat
+src/include/SDL2
+src/lib
+SDL2.dll
