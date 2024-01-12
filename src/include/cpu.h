@@ -510,12 +510,12 @@ struct CPU {
         INS_JSR = 0x20;
 
     void Execute( u32 Cycles, Mem& memory, Printer& printer, bool debug ) {
-        while ((int)Cycles > 0) {
-            printf("PC: 0x%x | ", PC);
+        while ((int)Cycles > 0) { // Maybe make a while true till a draw call.
             Byte Ins = FetchByte( Cycles, memory );
 
             // Debug
             if (debug) {
+                printf("PC: %p | ", PC);
                 printf("Instruction: 0x%x | ", Ins);
                 printf("A: 0x%x | ", A);
                 printf("Cycles: %d\n", Cycles);
@@ -962,8 +962,19 @@ struct CPU {
             }
         }
     }
+    void printRegFlags() {
+        printf("A = 0x%x\n", A);
+        printf("X = 0x%x\n", X);
+        printf("Y = 0x%x\n\n", Y);
+        printf("C = %d\n", C);
+        printf("Z = %d\n", Z);
+        printf("I = %d\n", I);
+        printf("D = %d\n", D);
+        printf("B = %d\n", B);
+        printf("V = %d\n", V);
+        printf("N = %d\n", N);
+    }
 };
-
 
 
 // int main() {
