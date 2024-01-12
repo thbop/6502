@@ -114,27 +114,86 @@ def parse_addressing_mode(args):
     global out
     if len(args) == 1:
         out += get_opcode('ACC', args) + '\n'
+        return 1
     else:
         arg1 = args[1].replace('\n', '')
         if arg1[0] == '#': # Immediate
             out += get_opcode('IM', args) + '\n' + arg1[1:] + '\n'
+            return 2
 
         elif arg1[0] == '$':
             if len(arg1) == 3: # Zero Page
                 out += get_opcode('ZP', args) + '\n' + arg1[1:] + '\n'
+                return 2
             
             elif len(arg1) == 4 and arg1[3] == ',': # Zero Page X or Y
                 out += get_opcode('ZP'+args[2][0], args) + '\n' + arg1[1:-1] + '\n'
+                return 2
             
             elif len(arg1) == 5: # Absolute
                 out += get_opcode('ABS', args) + '\n' + arg1[1:][2:] + '\n' + arg1[1:][:2] + '\n'
+                return 3
             
             elif len(arg1) == 6 and arg1[5] == ',': # Absolute X or Y
                 out += get_opcode('AB'+args[2][0], args) + '\n' + arg1[1:][2:-1] + '\n' + arg1[1:][:2] + '\n'
+                return 3
+    
+
+
+vars = {}
+var_memory_counter = 16 # This is where the first variable will be stored in memory
+
+def to_hex_str(value):
+    return hex(value)[2:].upper()
+
+def to_uneg_hex(value):
+    return to_hex_str(256 - value)
+
+def mode_process(value, ins=None):
+    global vars
+    n = '0123456789'
+    if ins == None:
+        return value if value[0] in n else to_hex_str(vars[value])
+    else:
+        return address_mode_opcodes['IM'][ins] if args[1][0] in n else address_mode_opcodes['ZP'][ins]
+
+def parse_high_level(args):
+    global vars, out, var_memory_counter, loop_catcher
+    args[-1] = args[-1].strip()
+    if args[0] == '!var':
+        
+        vars[args[1]] = var_memory_counter
+        if args[3] != '0':
+            out += 'A9\n' + args[3] + '\n85\n' + to_hex_str(var_memory_counter) + '\n'
+
+        var_memory_counter += 1
+        return 4
+    
+    elif args[0] == '!eval':
+        # !eval a b -> c
+        # lda v
+        # adc v2
+        # sta v3
+        n = '0123456789'
+        out += f'{mode_process(args[1], "lda")}\n{mode_process(args[1])}\n{mode_process(args[2], "adc")}\n{mode_process(args[2])}\n85\n{to_hex_str(vars[args[4]])}\n'
+        return 6
+    
+    elif args[0] == '!marker':
+        return args[1]
+    
+    elif args[0] == '!bcc':
+        value = 1
+        for i in range(loop_catcher.index(args[1])+1, len(loop_catcher)):
+            if isinstance(loop_catcher[i], int):
+                value += loop_catcher[i]
+        
+        print(value)
+
+        out += f'90\n{to_uneg_hex(value)}\n'
 
 
 
-
+loop_catcher = []
 for l in s:
     gotoNext = False
     args = l.split(' ') # Separate arguments
@@ -149,8 +208,12 @@ for l in s:
         
         # Parse
         if l != '\n':
-            parse_addressing_mode(args)
+            if args[0][0] == '!':
+                loop_catcher.append(parse_high_level(args))
+            else:
+                loop_catcher.append(parse_addressing_mode(args))
 
+print(loop_catcher)
 
 # An extra \n char may be stored in out
 if out[-1] == '\n':

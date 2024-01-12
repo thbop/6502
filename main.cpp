@@ -20,6 +20,9 @@ int main( int argc, char *argv[] ) {
     cpu.Execute( 500, mem, printer, true );
     cpu.printRegFlags();
 
+    Byte f = 0xF0;
+    printf("%d\n", f);
+
     const int WIDTH = 800, HEIGHT = 600;
 
     // Define the SDL window and screen surface
