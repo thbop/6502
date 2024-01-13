@@ -38,7 +38,12 @@ address_mode_opcodes = {
         'adc': '69',
         'and': '29',
         'bcc': '90',
-        'beq': 'F0'
+        'beq': 'F0',
+        'bmi': '30',
+        'bne': 'D0',
+        'bpl': '10',
+        'bvc': '50',
+        'bvs': '70',
     },
     'ZP': {
         'lda': 'A5',
@@ -81,7 +86,8 @@ address_mode_opcodes = {
         'and': '2D',
         'asl': '0E',
         'bit': '2C',
-        'sta': '8D'
+        'sta': '8D',
+        'jsr': '20'
     },
     'ABX': {
         'lda':'BD',
@@ -187,7 +193,6 @@ def parse_high_level(args):
             if isinstance(loop_catcher[i], int):
                 value += loop_catcher[i]
         
-        print(value)
 
         out += f'90\n{to_uneg_hex(value)}\n'
 

@@ -426,6 +426,8 @@ struct CPU {
         INS_BMI = 0x30,
         INS_BNE = 0xD0,
         INS_BPL = 0x10,
+        INS_BVC = 0x50,
+        INS_BVS = 0x70,
 
         // ASL
         INS_ASL_ACC = 0x0A,
@@ -714,6 +716,32 @@ struct CPU {
                     }
                     else { PC++; }
                 } break;
+                case INS_BVC: { // Untested
+                    SByte Offset = FetchSByte( Cycles, memory, false );
+                    if ( !V ) {
+                        Cycles--;
+                        Word OldPC = PC;
+                        PC += Offset;
+                        // Check if page is crossed
+                        if ( ( PC & 0xFF00 ) > ( OldPC & 0xFF00 ) ) {
+                            Cycles -= 2;
+                        }
+                    }
+                    else { PC++; }
+                } break;
+                case INS_BVS: { // Untested
+                    SByte Offset = FetchSByte( Cycles, memory, false );
+                    if ( V ) {
+                        Cycles--;
+                        Word OldPC = PC;
+                        PC += Offset;
+                        // Check if page is crossed
+                        if ( ( PC & 0xFF00 ) > ( OldPC & 0xFF00 ) ) {
+                            Cycles -= 2;
+                        }
+                    }
+                    else { PC++; }
+                } break;
 
 
                 // BIT
@@ -992,8 +1020,7 @@ struct CPU {
                 case INS_JSR: { // Review, not done.
                     Word SubAddr = FetchWord( Cycles, memory );
                     memory.WriteWord( PC - 1, SP, Cycles );
-                    // Increment the Stack Pointer!
-                    Cycles--;
+                    SP += 2; // Hopefully this is correct
                     PC = SubAddr;
                     Cycles--;
                 } break;
