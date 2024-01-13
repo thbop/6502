@@ -512,6 +512,10 @@ struct CPU {
         INS_PHP = 0x08,
         INS_PLA = 0x68,
         INS_PLP = 0x28,
+
+        // Jumps
+        INS_JMP_ABS = 0x4C,
+        INS_JMP_IND = 0x6C,
         INS_JSR = 0x20;
 
     void Execute( u32 Cycles, Mem& memory, Printer& printer, bool debug ) {
@@ -1017,10 +1021,19 @@ struct CPU {
                     SeparateFlags(memory[SP]);   
                     Cycles -= 3;
                 } break;
+
+                // Jump
+                case INS_JMP_ABS: { // Untested
+                    PC = FetchWord( Cycles, memory );
+                } break;
+                case INS_JMP_IND: { // Untested
+                    Word IndirectAddr = FetchWord( Cycles, memory );
+                    PC = ReadWord( IndirectAddr, Cycles, memory );
+                } break;
                 case INS_JSR: { // Review, not done.
                     Word SubAddr = FetchWord( Cycles, memory );
-                    memory.WriteWord( PC - 1, SP, Cycles );
-                    SP += 2; // Hopefully this is correct
+                    memory.WriteWord( PC - 1, SP, Cycles ); // Create proper push and pull stack functions
+                    SP -= 2; // Hopefully this is correct
                     PC = SubAddr;
                     Cycles--;
                 } break;
