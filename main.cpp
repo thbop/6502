@@ -15,9 +15,9 @@ int main( int argc, char *argv[] ) {
     Printer printer;
     cpu.Reset( mem );
 
-    // mem.LoadFile("test.bin");
-    // cpu.Execute( 500, mem, printer, true );
-    // cpu.printRegFlags();
+    mem.LoadFile("test.bin");
+    cpu.Execute( 500, mem, printer, true );
+    cpu.printRegFlags();
 
 
     const int WIDTH = 800, HEIGHT = 600;

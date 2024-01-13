@@ -423,6 +423,9 @@ struct CPU {
         INS_BCC = 0x90,
         INS_BCS = 0xB0,
         INS_BEQ = 0xF0,
+        INS_BMI = 0x30,
+        INS_BNE = 0xD0,
+        INS_BPL = 0x10,
 
         // ASL
         INS_ASL_ACC = 0x0A,
@@ -662,6 +665,45 @@ struct CPU {
                 case INS_BEQ: {
                     SByte Offset = FetchSByte( Cycles, memory, false );
                     if ( Z ) {
+                        Cycles--;
+                        Word OldPC = PC;
+                        PC += Offset;
+                        // Check if page is crossed
+                        if ( ( PC & 0xFF00 ) > ( OldPC & 0xFF00 ) ) {
+                            Cycles -= 2;
+                        }
+                    }
+                    else { PC++; }
+                } break;
+                case INS_BMI: { // Untested
+                    SByte Offset = FetchSByte( Cycles, memory, false );
+                    if ( N ) {
+                        Cycles--;
+                        Word OldPC = PC;
+                        PC += Offset;
+                        // Check if page is crossed
+                        if ( ( PC & 0xFF00 ) > ( OldPC & 0xFF00 ) ) {
+                            Cycles -= 2;
+                        }
+                    }
+                    else { PC++; }
+                } break;
+                case INS_BNE: { // Untested
+                    SByte Offset = FetchSByte( Cycles, memory, false );
+                    if ( !Z ) {
+                        Cycles--;
+                        Word OldPC = PC;
+                        PC += Offset;
+                        // Check if page is crossed
+                        if ( ( PC & 0xFF00 ) > ( OldPC & 0xFF00 ) ) {
+                            Cycles -= 2;
+                        }
+                    }
+                    else { PC++; }
+                } break;
+                case INS_BPL: { // Untested
+                    SByte Offset = FetchSByte( Cycles, memory, false );
+                    if ( !N ) {
                         Cycles--;
                         Word OldPC = PC;
                         PC += Offset;
