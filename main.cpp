@@ -16,12 +16,10 @@ int main( int argc, char *argv[] ) {
     Printer printer;
     cpu.Reset( mem );
 
-    mem.LoadFile("test.bin");
-    cpu.Execute( 500, mem, printer, true );
-    cpu.printRegFlags();
+    // mem.LoadFile("test.bin");
+    // cpu.Execute( 500, mem, printer, true );
+    // cpu.printRegFlags();
 
-    Byte f = 0xF0;
-    printf("%d\n", f);
 
     const int WIDTH = 800, HEIGHT = 600;
 
@@ -43,6 +41,12 @@ int main( int argc, char *argv[] ) {
                 }
                 // Clear screen
                 W_ClearScreen(renderer, W_LR_PALETTE[0]);
+
+                for (int i = 0; i < 40; i++) {
+                    for (int j = 0; j < 48; j++) {
+                        W_Draw40( renderer, i, j, (i + j) % 15 );
+                    }
+                }
 
                 // Update screen
                 SDL_RenderPresent( renderer );

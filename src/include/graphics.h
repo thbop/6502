@@ -2,26 +2,36 @@
 #define GRAPHICS_H
 
 // CHANGE THESE COLORS TO MATCH OTHER IMG
-int W_LR_PALETTE[16][4] = {
+int W_LR_PALETTE[16][4] = { // 40x40 or 40x48
     {0, 0, 0, 255},
-    {114, 38, 64, 255},
-    {64, 51, 127, 255},
-    {228, 52, 254, 255},
-    {14, 89, 64, 255},
-    {128, 128, 128, 255},
-    {27, 154, 254, 255},
-    {191, 179, 255, 255},
-    {64, 76, 0, 255},
-    {228, 101, 1, 255},
-    {241, 166, 191, 255},
-    {128, 128, 128, 255},
-    {27, 203, 1, 255},
-    {191, 204, 128, 255},
-    {141, 217, 191, 255},
-    {255, 255, 255, 255}
+    {153, 3, 95, 255},
+    {66, 4, 225, 255},
+    {202, 19, 254, 255},
+    {0, 115, 16, 255},
+    {127, 127, 127, 255},
+    {36, 151, 255, 255},
+    {170, 162, 255, 255},
+    {79, 81, 1, 255},
+    {240, 92, 0, 255},
+    {190, 190, 190, 255},
+    {255, 133, 255, 255},
+    {18, 202, 7, 255},
+    {206, 212, 19, 255},
+    {81, 245, 149, 255},
+    {255, 255, 254, 255}
 };
 
-// ADD HIGH RES PALETTE
+int W_HR_PALETTE[8][4] = { // 280x192
+    {0, 0, 0, 255},
+    {18, 202, 7, 255},
+    {202, 19, 254, 255},
+    {190, 190, 190, 255},
+    {0, 0, 0, 255},
+    {240, 92, 0, 255},
+    {36, 151, 255, 255},
+    {255, 255, 255, 255},
+};
+
     
 
 void W_PrintError( std::string message ) {
@@ -67,12 +77,19 @@ void W_ClearScreen( SDL_Renderer*& renderer, int (&color)[4] ) {
     SDL_RenderClear( renderer );
 }
 
-void W_DrawRect( SDL_Renderer*& renderer, int (&color)[4], const SDL_Rect rect ) {
+void W_DrawRect( SDL_Renderer*& renderer, const SDL_Rect rect, int (&color)[4] ) {
     SDL_SetRenderDrawColor( renderer, color[0], color[1], color[2], color[3] );
     SDL_RenderFillRect( renderer, &rect );
 }
 
 // Specific drawing functions, graphics memory / processing stuff
 // https://en.wikipedia.org/wiki/Apple_II_graphics
+// 40x40 or 40x48
+// 280x192
+
+void W_Draw40( SDL_Renderer*& renderer, int x, int y, int color ) {
+    SDL_Rect rect = { x * 20, (int)(y * 12.5), 20, 13 };
+    W_DrawRect( renderer, rect, W_LR_PALETTE[color] );
+}
 
 #endif
