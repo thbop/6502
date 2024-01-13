@@ -1,4 +1,3 @@
-#include <iostream> // <- try to remove this sometime
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
@@ -22,6 +21,7 @@ int main( int argc, char *argv[] ) {
 
 
     const int WIDTH = 800, HEIGHT = 600;
+
 
     // Define the SDL window and screen surface
     SDL_Window* window = NULL;

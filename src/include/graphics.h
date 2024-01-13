@@ -35,7 +35,7 @@ int W_HR_PALETTE[8][4] = { // 280x192
     
 
 void W_PrintError( std::string message ) {
-    std::cout << message << " SDL_Error:" << SDL_GetError() << std::endl;
+    printf("%s SDL_Error:%s\n", message.c_str(), SDL_GetError());
 }
 
 bool W_Init() {
