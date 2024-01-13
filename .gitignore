@@ -1,3 +1,5 @@
 *.exe
 .vscode
 run.bat
+bios.cfg
+misc/wozmon.s
