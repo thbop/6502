@@ -349,8 +349,9 @@ struct CPU {
         return Value;
     }
     Word Pull( u32& Cycles, Mem& memory ) {
-        SP += 1;
+        SP++;
         Word Value = ReadWord( SP, Cycles, memory );
+        SP++;
         return Value;
     }
 
@@ -1044,7 +1045,8 @@ struct CPU {
                     Cycles -= 3;
                 } break;
                 case INS_RTS: {
-                    PC = Pull( Cycles, memory ); - 1;
+                    printf( "%p\n", SP );
+                    PC = Pull( Cycles, memory );
                     Cycles -= 3;
                 } break;
 
@@ -1058,13 +1060,13 @@ struct CPU {
                 } break;
                 case INS_JSR: { // Review, not done.
                     Word SubAddr = FetchWord( Cycles, memory );
-                    Push( PC-1, Cycles, memory );
+                    Push( PC, Cycles, memory );
                     PC = SubAddr;
                     Cycles--;
                 } break;
 
                 default: {
-                    printf("Instruction not handled %p\n", Ins);
+                    printf("Instruction not handled 0x%x\n", Ins);
                 } break;
             }
         }

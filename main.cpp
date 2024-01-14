@@ -19,10 +19,8 @@ int main( int argc, char *argv[] ) {
     cpu.Execute( 50, mem, true );
     cpu.printRegFlags();
 
-    
-    
-    
 
+    // mem.PrintRegion( 0x1F0, 0x1FF );
 
     const int WIDTH = 800, HEIGHT = 600;
 
