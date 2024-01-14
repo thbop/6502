@@ -96,13 +96,13 @@ void W_Draw40( SDL_Renderer*& renderer, int x, int y, int color ) {
 }
 
 void W_DrawASCII( SDL_Renderer*& renderer, int character, int x, int y ) {
-    SDL_Rect char_pix = {x*15 + x, y*21 + y, 3, 3};
+    SDL_Rect char_pix = {x*15 + x*3, y*21 + y*3, 3, 3};
     for (int j = 0; j < 7; j++) {
         for (int i = 0; i < 5; i++) {
             if (ASCII[character][j][i]) { W_DrawRect( renderer, char_pix, W_WHITE ); }
             char_pix.x += 3;
         }
-        char_pix.x = x*15 + x;
+        char_pix.x = x*15 + x*3;
         char_pix.y += 3;
     }
 }

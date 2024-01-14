@@ -24,7 +24,7 @@ int main( int argc, char *argv[] ) {
     const int WIDTH = 800, HEIGHT = 600;
 
 
-    char txt[] = "(!##!)";
+    char txt[] = "NA";
     for (int i = 0; i < sizeof(txt); i++) {
         W_PushText( txt[i] );
     }
