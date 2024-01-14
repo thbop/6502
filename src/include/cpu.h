@@ -280,9 +280,9 @@ struct CPU {
         return ReadByte( ZeroPageAddr, Cycles, memory );
     }
 
-    void WriteZeroPage( u32& Cycles, Mem& memory ) { // 2 cycles
+    void WriteZeroPage( Byte& From, u32& Cycles, Mem& memory ) { // 2 cycles
         Byte ZeroPageAddr = FetchByte( Cycles, memory );
-        memory[ZeroPageAddr] = A;
+        memory[ZeroPageAddr] = From;
         Cycles--;
     }
     
@@ -301,9 +301,9 @@ struct CPU {
         return ReadByte( ZeroPageAddr, Cycles, memory );
     }
 
-    void WriteZeroPageX( u32& Cycles, Mem& memory ) { // 3 cycles - untested
+    void WriteZeroPageX( Byte& From, u32& Cycles, Mem& memory ) { // 3 cycles - untested
         Byte ZeroPageAddr = FetchByte( Cycles, memory ) + X;
-        memory[ZeroPageAddr] = A;
+        memory[ZeroPageAddr] = From;
         Cycles -= 2;
     }
 
@@ -324,17 +324,91 @@ struct CPU {
         return ReadByte( AbsAddr, Cycles, memory );
     }
 
-    void WriteAbsolute( u32& Cycles, Mem& memory ) { // 3 cycles
+    void WriteAbsolute( Byte& From, u32& Cycles, Mem& memory ) { // 3 cycles
         Word AbsAddr = FetchWord( Cycles, memory );
-        memory[AbsAddr] = A;
+        memory[AbsAddr] = From;
         Cycles--;
 
         // Printer stuff; not very realistic but still funny
         // if (AbsAddr == 0xFFF9) {
         //     printer.Print(A);
         // }
+
+        // Graphics monitoring
+        // Bad code structure, maybe: https://stackoverflow.com/questions/9568150/what-is-a-c-delegate (Option 3)
+        
+
     }
 
+
+    Byte LoadAbsoluteX( u32& Cycles, Mem& memory, bool PageCrossable=true ) { // 3-4 cycles
+        Word AbsAddr = FetchWord( Cycles, memory );
+        AbsAddr += X;
+        if (PageCrossable) { CheckPageOverflow( AbsAddr, X, Cycles ); } // Checks if the LSB crossed the page
+        return ReadByte( AbsAddr, Cycles, memory );
+    }
+    Byte LoadAbsoluteX( u32& Cycles, Mem& memory, Word& AbsAddr, bool PageCrossable=true ) { // 3-4 cycles
+        AbsAddr = FetchWord( Cycles, memory );
+        AbsAddr += X;
+        if (PageCrossable) { CheckPageOverflow( AbsAddr, X, Cycles ); } // Checks if the LSB crossed the page
+        return ReadByte( AbsAddr, Cycles, memory );
+    }
+
+    void WriteAbsoluteX( Byte& From, u32& Cycles, Mem& memory ) { // 4 cycles - untested
+        Word AbsAddr = FetchWord( Cycles, memory ) + X;
+        memory[AbsAddr] = From;
+        Cycles -= 2;
+    }
+
+    Byte LoadAbsoluteY( u32& Cycles, Mem& memory, bool PageCrossable=true ) { // 3-4 cycles
+        Word AbsAddr = FetchWord( Cycles, memory );
+        AbsAddr += Y;
+        if (PageCrossable) { CheckPageOverflow( AbsAddr, Y, Cycles ); }
+        return ReadByte( AbsAddr, Cycles, memory );
+    }
+
+    void WriteAbsoluteY( Byte& From, u32& Cycles, Mem& memory ) { // 4 cycles - untested
+        Word AbsAddr = FetchWord( Cycles, memory ) + Y;
+        memory[AbsAddr] = From;
+        Cycles -= 2;
+    }
+
+    Byte LoadIndirectX( u32& Cycles, Mem& memory ) { // 5 cycles
+        Byte ZeroPageAddr = FetchByte( Cycles, memory );
+        ZeroPageAddr += X; // Wrap around Zero Page
+        Cycles--;
+
+        Word TargetAddr = ReadWord( ZeroPageAddr, Cycles, memory );
+        return ReadByte( TargetAddr, Cycles, memory );
+    }
+
+    void WriteIndirectX( Byte& From, u32& Cycles, Mem& memory ) { // 5 cycles - untested
+        Byte ZeroPageAddr = FetchWord( Cycles, memory ) + X;
+        Word TargetAddr = ReadWord( ZeroPageAddr, Cycles, memory );
+        memory[TargetAddr] = From;
+
+        Cycles--;
+    }
+
+    Byte LoadIndirectY( u32& Cycles, Mem& memory ) { // 4-5 cycles
+        Byte ZeroPageAddr = FetchByte( Cycles, memory );
+
+        Word TargetAddr = ReadWord( ZeroPageAddr, Cycles, memory );
+        CheckPageOverflow( TargetAddr, Y, Cycles );
+        TargetAddr += Y;
+                    
+        return ReadByte( TargetAddr, Cycles, memory );
+    }
+
+    void WriteIndirectY( Byte& From, u32& Cycles, Mem& memory ) { // 5 cycles - untested
+        Byte ZeroPageAddr = FetchWord( Cycles, memory );
+        Word TargetAddr = ReadWord( ZeroPageAddr, Cycles, memory ) + Y;
+        memory[TargetAddr] = From;
+
+        Cycles--;
+    }
+
+    // Stack operations
     void Push( Byte Value, Mem& memory ) {
         memory[SP] = Value;
         SP--;
@@ -353,74 +427,6 @@ struct CPU {
         Word Value = ReadWord( SP, Cycles, memory );
         SP++;
         return Value;
-    }
-
-
-    Byte LoadAbsoluteX( u32& Cycles, Mem& memory, bool PageCrossable=true ) { // 3-4 cycles
-        Word AbsAddr = FetchWord( Cycles, memory );
-        AbsAddr += X;
-        if (PageCrossable) { CheckPageOverflow( AbsAddr, X, Cycles ); } // Checks if the LSB crossed the page
-        return ReadByte( AbsAddr, Cycles, memory );
-    }
-    Byte LoadAbsoluteX( u32& Cycles, Mem& memory, Word& AbsAddr, bool PageCrossable=true ) { // 3-4 cycles
-        AbsAddr = FetchWord( Cycles, memory );
-        AbsAddr += X;
-        if (PageCrossable) { CheckPageOverflow( AbsAddr, X, Cycles ); } // Checks if the LSB crossed the page
-        return ReadByte( AbsAddr, Cycles, memory );
-    }
-
-    void WriteAbsoluteX( u32& Cycles, Mem& memory ) { // 4 cycles - untested
-        Word AbsAddr = FetchWord( Cycles, memory ) + X;
-        memory[AbsAddr] = A;
-        Cycles -= 2;
-    }
-
-    Byte LoadAbsoluteY( u32& Cycles, Mem& memory, bool PageCrossable=true ) { // 3-4 cycles
-        Word AbsAddr = FetchWord( Cycles, memory );
-        AbsAddr += Y;
-        if (PageCrossable) { CheckPageOverflow( AbsAddr, Y, Cycles ); }
-        return ReadByte( AbsAddr, Cycles, memory );
-    }
-
-    void WriteAbsoluteY( u32& Cycles, Mem& memory ) { // 4 cycles - untested
-        Word AbsAddr = FetchWord( Cycles, memory ) + Y;
-        memory[AbsAddr] = A;
-        Cycles -= 2;
-    }
-
-    Byte LoadIndirectX( u32& Cycles, Mem& memory ) { // 5 cycles
-        Byte ZeroPageAddr = FetchByte( Cycles, memory );
-        ZeroPageAddr += X; // Wrap around Zero Page
-        Cycles--;
-
-        Word TargetAddr = ReadWord( ZeroPageAddr, Cycles, memory );
-        return ReadByte( TargetAddr, Cycles, memory );
-    }
-
-    void WriteIndirectX( u32& Cycles, Mem& memory ) { // 5 cycles - untested
-        Byte ZeroPageAddr = FetchWord( Cycles, memory ) + X;
-        Word TargetAddr = ReadWord( ZeroPageAddr, Cycles, memory );
-        memory[TargetAddr] = A;
-
-        Cycles--;
-    }
-
-    Byte LoadIndirectY( u32& Cycles, Mem& memory ) { // 4-5 cycles
-        Byte ZeroPageAddr = FetchByte( Cycles, memory );
-
-        Word TargetAddr = ReadWord( ZeroPageAddr, Cycles, memory );
-        CheckPageOverflow( TargetAddr, Y, Cycles );
-        TargetAddr += Y;
-                    
-        return ReadByte( TargetAddr, Cycles, memory );
-    }
-
-    void WriteIndirectY( u32& Cycles, Mem& memory ) { // 5 cycles - untested
-        Byte ZeroPageAddr = FetchWord( Cycles, memory );
-        Word TargetAddr = ReadWord( ZeroPageAddr, Cycles, memory ) + Y;
-        memory[TargetAddr] = A;
-
-        Cycles--;
     }
 
     // opcodes
@@ -1003,25 +1009,25 @@ struct CPU {
 
                 // STA
                 case INS_STA_ZP: { // None of the these affect flags
-                    WriteZeroPage( Cycles, memory );
+                    WriteZeroPage( A, Cycles, memory );
                 } break;
                 case INS_STA_ZPX: {
-                    WriteZeroPageX( Cycles, memory );
+                    WriteZeroPageX( A, Cycles, memory );
                 } break;
                 case INS_STA_ABS: {
-                    WriteAbsolute( Cycles, memory );
+                    WriteAbsolute( A, Cycles, memory );
                 } break;
                 case INS_STA_ABX: {
-                    WriteAbsoluteX( Cycles, memory );
+                    WriteAbsoluteX( A, Cycles, memory );
                 } break;
                 case INS_STA_ABY: {
-                    WriteAbsoluteY( Cycles, memory );
+                    WriteAbsoluteY( A, Cycles, memory );
                 } break;
                 case INS_STA_IX: {
-                    WriteIndirectX( Cycles, memory );
+                    WriteIndirectX( A, Cycles, memory );
                 } break;
                 case INS_STA_IY: {
-                    WriteIndirectY( Cycles, memory );
+                    WriteIndirectY( A, Cycles, memory );
                 } break;
 
                 
@@ -1066,7 +1072,7 @@ struct CPU {
                 } break;
 
                 default: {
-                    printf("Instruction not handled 0x%x\n", Ins);
+                    if ( debug ) { printf("Instruction not handled 0x%x\n", Ins); }
                 } break;
             }
         }

@@ -17,7 +17,7 @@ int main( int argc, char *argv[] ) {
 
     mem.LoadFile("thbop.bin");
     cpu.Execute( 50, mem, true );
-    cpu.printRegFlags();
+    // cpu.printRegFlags();
 
 
     // mem.PrintRegion( 0x1F0, 0x1FF );
@@ -25,10 +25,10 @@ int main( int argc, char *argv[] ) {
     const int WIDTH = 800, HEIGHT = 600;
 
 
-    char txt[] = "int main() {\n   printf(\"Hello World!\");\n}";
-    for (int i = 0; i < sizeof(txt); i++) {
-        W_PushText( txt[i] );
-    }
+    // char txt[] = "int main() {\n   printf(\"Hello World!\");\n}";
+    // for (int i = 0; i < sizeof(txt); i++) {
+    //     W_PushText( txt[i] );
+    // }
 
     // Define the SDL window and screen surface
     SDL_Window* window = NULL;
@@ -56,6 +56,8 @@ int main( int argc, char *argv[] ) {
                 //         W_Draw40( renderer, i, j, (i + j) % 15 );
                 //     }
                 // }
+
+                // cpu.Execute( 50, mem, false ); // Still a cycles issue
 
                 // Text rendering
                 W_RenderTextBuffer( renderer );

@@ -131,4 +131,5 @@ void W_RenderTextBuffer( SDL_Renderer*& renderer ) {
     }
 }
 
+
 #endif
