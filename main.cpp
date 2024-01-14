@@ -16,13 +16,15 @@ int main( int argc, char *argv[] ) {
     Printer printer;
     cpu.Reset( mem );
 
-    mem.LoadFile("test.bin");
-    cpu.Execute( 500, mem, printer, true );
-    cpu.printRegFlags();
+    // mem.LoadFile("test.bin");
+    // cpu.Execute( 500, mem, printer, true );
+    // cpu.printRegFlags();
 
 
     const int WIDTH = 800, HEIGHT = 600;
 
+
+    W_PushText( '#' ); W_PushText( '$' );
 
     // Define the SDL window and screen surface
     SDL_Window* window = NULL;
@@ -52,7 +54,7 @@ int main( int argc, char *argv[] ) {
                 // }
 
                 // Text rendering
-                W_DrawASCII( renderer, 35, 0, 0 );
+                W_RenderTextBuffer( renderer );
 
                 // Update screen
                 SDL_RenderPresent( renderer );

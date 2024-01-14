@@ -96,13 +96,13 @@ void W_Draw40( SDL_Renderer*& renderer, int x, int y, int color ) {
 }
 
 void W_DrawASCII( SDL_Renderer*& renderer, int character, int x, int y ) {
-    SDL_Rect char_pix = {x*3, y*3, 3, 3};
+    SDL_Rect char_pix = {x*15, y*21, 3, 3};
     for (int j = 0; j < 7; j++) {
         for (int i = 0; i < 5; i++) {
             if (ASCII[character][j][i]) { W_DrawRect( renderer, char_pix, W_WHITE ); }
             char_pix.x += 3;
         }
-        char_pix.x = 0;
+        char_pix.x = x*15;
         char_pix.y += 3;
     }
 }
@@ -119,7 +119,10 @@ void W_PushText( char character ) {
 void W_RenderTextBuffer( SDL_Renderer*& renderer ) {
     for (int j = 0; j < 28; j++) {
         for (int i = 0; i < 52; i++) {
-            W_DrawASCII( renderer, W_TextBuffer[j][i], i, j );
+            if ( W_TextBuffer[j][i] != 0 ) {
+                W_DrawASCII( renderer, W_TextBuffer[j][i], i, j );
+            }
+            
         }
     }
 }
