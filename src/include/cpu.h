@@ -1039,7 +1039,7 @@ struct CPU {
                 } break;
 
                 default: {
-                    printf("Instruction not handled 0x%x\n", Ins);
+                    printf("Instruction not handled %p\n", Ins);
                 } break;
             }
         }

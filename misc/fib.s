@@ -16,6 +16,7 @@
 
 ; END pseudocode
 
+
 LDA #01
 STA $11 ; B = 1
 
