@@ -24,7 +24,10 @@ int main( int argc, char *argv[] ) {
     const int WIDTH = 800, HEIGHT = 600;
 
 
-    W_PushText( '#' ); W_PushText( '$' );
+    char txt[] = "(!##!)";
+    for (int i = 0; i < sizeof(txt); i++) {
+        W_PushText( txt[i] );
+    }
 
     // Define the SDL window and screen surface
     SDL_Window* window = NULL;
