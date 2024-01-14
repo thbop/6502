@@ -1,5 +1,8 @@
 .segment "CODE"
 
-lda #5
+mysubr:
+    lda #02
+    rts
 
-rts
+lda #03
+jsr mysubr

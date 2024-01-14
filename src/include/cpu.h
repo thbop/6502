@@ -512,6 +512,7 @@ struct CPU {
         INS_PHP = 0x08,
         INS_PLA = 0x68,
         INS_PLP = 0x28,
+        INS_RTS = 0x60,
 
         // Jumps
         INS_JMP_ABS = 0x4C,
@@ -1019,6 +1020,10 @@ struct CPU {
                 case INS_PLP: {
                     SP++;
                     SeparateFlags(memory[SP]);   
+                    Cycles -= 3;
+                } break;
+                case INS_RTS: {
+                    PC = ReadWord( SP, Cycles, memory ) - 1;
                     Cycles -= 3;
                 } break;
 

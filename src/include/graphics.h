@@ -32,7 +32,10 @@ int W_HR_PALETTE[8][4] = { // 280x192
     {255, 255, 255, 255},
 };
 
-    
+int W_BLACK[4] = {0, 0, 0, 255};
+int W_WHITE[4] = {255, 255, 255, 255};
+
+
 
 void W_PrintError( std::string message ) {
     printf("%s SDL_Error:%s\n", message.c_str(), SDL_GetError());
@@ -90,6 +93,35 @@ void W_DrawRect( SDL_Renderer*& renderer, const SDL_Rect rect, int (&color)[4] )
 void W_Draw40( SDL_Renderer*& renderer, int x, int y, int color ) {
     SDL_Rect rect = { x * 20, (int)(y * 12.5), 20, 13 };
     W_DrawRect( renderer, rect, W_LR_PALETTE[color] );
+}
+
+void W_DrawASCII( SDL_Renderer*& renderer, int character, int x, int y ) {
+    SDL_Rect char_pix = {x*3, y*3, 3, 3};
+    for (int j = 0; j < 7; j++) {
+        for (int i = 0; i < 5; i++) {
+            if (ASCII[character][j][i]) { W_DrawRect( renderer, char_pix, W_WHITE ); }
+            char_pix.x += 3;
+        }
+        char_pix.x = 0;
+        char_pix.y += 3;
+    }
+}
+// 52x28
+unsigned char W_TextBuffer[28][52];
+unsigned char W_TextPointer[2] = {0, 0};
+
+void W_PushText( char character ) {
+    W_TextBuffer[W_TextPointer[1]][W_TextPointer[0]] = character;
+    if ( W_TextPointer[0] < 52 ) { W_TextPointer[0]++; }
+    else { W_TextPointer[0] = 0; W_TextPointer[1]++; }
+}
+
+void W_RenderTextBuffer( SDL_Renderer*& renderer ) {
+    for (int j = 0; j < 28; j++) {
+        for (int i = 0; i < 52; i++) {
+            W_DrawASCII( renderer, W_TextBuffer[j][i], i, j );
+        }
+    }
 }
 
 #endif

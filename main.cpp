@@ -4,6 +4,7 @@
 
 #include <SDL2/SDL.h>
 
+#include <ascii.h>
 #include <graphics.h>
 #include <cpu.h>
 
@@ -42,11 +43,16 @@ int main( int argc, char *argv[] ) {
                 // Clear screen
                 W_ClearScreen(renderer, W_LR_PALETTE[0]);
 
-                for (int i = 0; i < 40; i++) {
-                    for (int j = 0; j < 48; j++) {
-                        W_Draw40( renderer, i, j, (i + j) % 15 );
-                    }
-                }
+
+                // Colors
+                // for (int i = 0; i < 40; i++) {
+                //     for (int j = 0; j < 48; j++) {
+                //         W_Draw40( renderer, i, j, (i + j) % 15 );
+                //     }
+                // }
+
+                // Text rendering
+                W_DrawASCII( renderer, 35, 0, 0 );
 
                 // Update screen
                 SDL_RenderPresent( renderer );
