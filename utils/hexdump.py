@@ -23,7 +23,7 @@ for j in range( 0, len(data), 32 ):
     for i in range(0, 32, 2):
         if j+i < len(data):
             character = data[j+i] + data[j+i+1]
-            print(character, end=' ' if i != 14 else '  ')
+            print(character.upper(), end=' ' if i != 14 else '  ')
             
             # Build the ascii representation on the side
             dec_char = int(character, 16)
@@ -37,7 +37,7 @@ for j in range( 0, len(data), 32 ):
 if args.s != None:
     out_file = ''
     for i in range( 0, len(data), 2 ):
-        out_file += data[i] + data[i+1] + '\n'
+        out_file += (data[i] + data[i+1]).upper() + '\n'
     out_file = out_file.rstrip()
     with open(args.s, 'w') as f:
         f.write(out_file)

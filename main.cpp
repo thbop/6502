@@ -15,9 +15,13 @@ int main( int argc, char *argv[] ) {
     CPU cpu;
     cpu.Reset( mem );
 
-    // mem.LoadFile("test.bin");
-    // cpu.Execute( 500, mem, true );
-    // cpu.printRegFlags();
+    mem.LoadFile("thbop.bin");
+    cpu.Execute( 50, mem, true );
+    cpu.printRegFlags();
+
+    
+    
+    
 
 
     const int WIDTH = 800, HEIGHT = 600;

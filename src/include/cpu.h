@@ -73,7 +73,7 @@ struct Mem {
         Cycles -= 2;
     }
 
-    void LoadFile( const char *filename, Word startAddress=0x0200 ) {
+    void LoadFile( const char *filename, Word startAddress=0x8000 ) {
         // Code adapted from that written by Bard (https://bard.google.com/)
         FILE *fp = fopen(filename, "r");
         if (fp == NULL) {
@@ -85,6 +85,11 @@ struct Mem {
             Data[i + startAddress] = (Byte)value;
         }
         fclose(fp);
+    }
+    void PrintRegion( Word start, Word end ) {
+        for (Word i = start; i <= end; i++) {
+            printf("%p: %p\n", i, Data[i]);
+        }
     }
 };
 
@@ -105,7 +110,7 @@ struct CPU {
 
 
     void Reset( Mem& memory ) {
-        PC = 0x0200; // Natively 0xFFFC
+        PC = 0x8000; // Natively 0xFFFC
         SP = 0x01FF;
         C = Z = I = D = B = V = N = 0;
         A = X = Y = 0;
@@ -329,6 +334,26 @@ struct CPU {
         //     printer.Print(A);
         // }
     }
+
+    void Push( Byte Value, Mem& memory ) {
+        memory[SP] = Value;
+        SP--;
+    }
+    void Push( Word Value, u32& Cycles, Mem& memory ) {
+        memory.WriteWord( Value, SP - 1, Cycles );
+        SP -= 2;
+    }
+    Byte Pull( Mem& memory ) {
+        SP++;
+        Byte Value = memory[SP];
+        return Value;
+    }
+    Word Pull( u32& Cycles, Mem& memory ) {
+        SP += 1;
+        Word Value = ReadWord( SP, Cycles, memory );
+        return Value;
+    }
+
 
     Byte LoadAbsoluteX( u32& Cycles, Mem& memory, bool PageCrossable=true ) { // 3-4 cycles
         Word AbsAddr = FetchWord( Cycles, memory );
@@ -1001,29 +1026,25 @@ struct CPU {
                 
                 // Implied instructions
                 case INS_PHA: {
-                    memory[SP] = A;
-                    SP--;
+                    Push( A, memory );
                     Cycles -= 2;
                 } break;
                 case INS_PHP: {
                     Byte status = CombineFlags();
-                    memory[SP] = status;
-                    SP--;
+                    Push( status, memory );
                     Cycles -= 2;
                 } break;
                 case INS_PLA: {
-                    SP++;
-                    A = memory[SP];    
+                    A = Pull( memory );  
                     Cycles -= 3;
                     SetGenericStatus( A );
                 } break;
                 case INS_PLP: {
-                    SP++;
-                    SeparateFlags(memory[SP]);   
+                    SeparateFlags(Pull( memory ));   
                     Cycles -= 3;
                 } break;
                 case INS_RTS: {
-                    PC = ReadWord( SP, Cycles, memory ) - 1;
+                    PC = Pull( Cycles, memory ); - 1;
                     Cycles -= 3;
                 } break;
 
@@ -1037,8 +1058,7 @@ struct CPU {
                 } break;
                 case INS_JSR: { // Review, not done.
                     Word SubAddr = FetchWord( Cycles, memory );
-                    memory.WriteWord( PC - 1, SP, Cycles ); // Create proper push and pull stack functions
-                    SP -= 2; // Hopefully this is correct
+                    Push( PC-1, Cycles, memory );
                     PC = SubAddr;
                     Cycles--;
                 } break;
