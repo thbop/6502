@@ -13,18 +13,17 @@
 int main( int argc, char *argv[] ) {
     Mem mem;
     CPU cpu;
-    Printer printer;
     cpu.Reset( mem );
 
     // mem.LoadFile("test.bin");
-    // cpu.Execute( 500, mem, printer, true );
+    // cpu.Execute( 500, mem, true );
     // cpu.printRegFlags();
 
 
     const int WIDTH = 800, HEIGHT = 600;
 
 
-    char txt[] = "W_PushText( txt[i] );";
+    char txt[] = "int main() {\n   printf(\"Hello World!\");\n}";
     for (int i = 0; i < sizeof(txt); i++) {
         W_PushText( txt[i] );
     }

@@ -20,19 +20,19 @@ using Word = unsigned short; // 16 bit, FFFF
 using u32 = unsigned int;
 
 
-struct Printer {
-    // A digital printer that outputs a specific memory address to a file.
-    FILE *fp = fopen("printer.txt", "a");
+// struct Printer {
+//     // A digital printer that outputs a specific memory address to a file.
+//     FILE *fp = fopen("printer.txt", "a");
 
-    void Print( Byte Value ) {
-        fprintf(fp, "%d\n", Value);
-    }
+//     void Print( Byte Value ) {
+//         fprintf(fp, "%d\n", Value);
+//     }
 
-    void PowerOff() {
-        fclose(fp);
-    }
+//     void PowerOff() {
+//         fclose(fp);
+//     }
     
-};
+// };
 
 struct Mem {
     static constexpr u32 MAX_MEM = 1024 * 64;
@@ -319,15 +319,15 @@ struct CPU {
         return ReadByte( AbsAddr, Cycles, memory );
     }
 
-    void WriteAbsolute( u32& Cycles, Mem& memory, Printer& printer ) { // 3 cycles
+    void WriteAbsolute( u32& Cycles, Mem& memory ) { // 3 cycles
         Word AbsAddr = FetchWord( Cycles, memory );
         memory[AbsAddr] = A;
         Cycles--;
 
         // Printer stuff; not very realistic but still funny
-        if (AbsAddr == 0xFFF9) {
-            printer.Print(A);
-        }
+        // if (AbsAddr == 0xFFF9) {
+        //     printer.Print(A);
+        // }
     }
 
     Byte LoadAbsoluteX( u32& Cycles, Mem& memory, bool PageCrossable=true ) { // 3-4 cycles
@@ -519,7 +519,7 @@ struct CPU {
         INS_JMP_IND = 0x6C,
         INS_JSR = 0x20;
 
-    void Execute( u32 Cycles, Mem& memory, Printer& printer, bool debug ) {
+    void Execute( u32 Cycles, Mem& memory, bool debug ) {
         while ((int)Cycles > 0) { // Maybe make a while true till a draw call.
             Byte Ins = FetchByte( Cycles, memory );
 
@@ -983,7 +983,7 @@ struct CPU {
                     WriteZeroPageX( Cycles, memory );
                 } break;
                 case INS_STA_ABS: {
-                    WriteAbsolute( Cycles, memory, printer );
+                    WriteAbsolute( Cycles, memory );
                 } break;
                 case INS_STA_ABX: {
                     WriteAbsoluteX( Cycles, memory );

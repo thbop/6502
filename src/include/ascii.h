@@ -5,7 +5,7 @@
 #define ASCII_H
 
 
-// Some character taken from https://fontstruct.com/fontstructions/show/2398430/panasonic-kx-tga250fx-normal
+// Some characters taken from https://fontstruct.com/fontstructions/show/2398430/panasonic-kx-tga250fx-normal
 char ASCII[128][7][5] = {
     {},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},
     {
