@@ -8,6 +8,29 @@ DSPCR            = $D013        ; Decides when a char is set.
 
                 LDA #'H'
                 JSR ECHO
+                LDA #'e'
+                JSR ECHO
+                LDA #'l'
+                JSR ECHO
+                LDA #'l'
+                JSR ECHO
+                LDA #'o'
+                JSR ECHO
+                LDA #' '
+                JSR ECHO
+                LDA #'W'
+                JSR ECHO
+                LDA #'o'
+                JSR ECHO
+                LDA #'r'
+                JSR ECHO
+                LDA #'l'
+                JSR ECHO
+                LDA #'d'
+                JSR ECHO
+                LDA #'!'
+                JSR ECHO
+                
                 JMP WAIT
 
 ECHO:           STA DSP

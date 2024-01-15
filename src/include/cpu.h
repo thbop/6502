@@ -329,6 +329,7 @@ struct CPU {
         memory[AbsAddr] = From;
         Cycles--;
 
+
         // Printer stuff; not very realistic but still funny
         // if (AbsAddr == 0xFFF9) {
         //     printer.Print(A);
@@ -336,7 +337,7 @@ struct CPU {
 
         // Graphics monitoring
         // Bad code structure, maybe: https://stackoverflow.com/questions/9568150/what-is-a-c-delegate (Option 3)
-        if ( AbsAddr == 0xD013 ) {
+        if ( memory[0xD013] ) {
             W_PushText( memory[0xD012] );
         }
     }
