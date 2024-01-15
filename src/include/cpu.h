@@ -315,6 +315,12 @@ struct CPU {
         return ReadByte( ZeroPageAddr, Cycles, memory );
     }
 
+    void WriteZeroPageY( Byte& From, u32& Cycles, Mem& memory ) { // 3 cycles - untested
+        Byte ZeroPageAddr = FetchByte( Cycles, memory ) + Y;
+        memory[ZeroPageAddr] = From;
+        Cycles -= 2;
+    }
+
     Byte LoadAbsolute( u32& Cycles, Mem& memory ) { // 3 cycles
         Word AbsAddr = FetchWord( Cycles, memory );
         return ReadByte( AbsAddr, Cycles, memory );
@@ -536,6 +542,16 @@ struct CPU {
         INS_STA_ABY = 0x99,
         INS_STA_IX = 0x81,
         INS_STA_IY = 0x91,
+
+        // STX
+        INS_STX_ZP = 0x86,
+        INS_STX_ZPY = 0x96,
+        INS_STX_ABS = 0x8E,
+
+        // STY
+        INS_STY_ZP = 0x84,
+        INS_STY_ZPX = 0x94,
+        INS_STY_ABS = 0x8C,
 
         // BIT
         INS_BIT_ZP = 0x24,
@@ -1030,6 +1046,28 @@ struct CPU {
                 } break;
                 case INS_STA_IY: {
                     WriteIndirectY( A, Cycles, memory );
+                } break;
+
+                // STX - untested
+                case INS_STX_ZP: {
+                    WriteZeroPage( X, Cycles, memory );
+                } break;
+                case INS_STX_ZPY: {
+                    WriteZeroPageY( X, Cycles, memory );
+                } break;
+                case INS_STX_ABS: {
+                    WriteAbsolute( X, Cycles, memory );
+                } break;
+
+                // STY - untested
+                case INS_STY_ZP: {
+                    WriteZeroPage( Y, Cycles, memory );
+                } break;
+                case INS_STY_ZPX: {
+                    WriteZeroPageX( Y, Cycles, memory );
+                } break;
+                case INS_STY_ABS: {
+                    WriteAbsolute( Y, Cycles, memory );
                 } break;
 
                 

@@ -36,8 +36,7 @@ DSPCR            = $D013        ; Decides when a char is set.
 ECHO:           STA DSP
                 LDA #01
                 STA DSPCR       ; My odd way to detect a character change
-                LDA #00
-                STA DSPCR
+                STY DSPCR
                 RTS
 
 WAIT:           LDA #80
