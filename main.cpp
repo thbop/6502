@@ -3,6 +3,7 @@
 #include <string>
 
 #include <SDL2/SDL.h>
+#include <GL/gl.h>
 
 #include <ascii.h>
 #include <graphics.h>
@@ -16,7 +17,7 @@ int main( int argc, char *argv[] ) {
     cpu.Reset( mem );
 
     mem.LoadFile("thbop.bin");
-    cpu.Execute( 50, mem, true );
+    // cpu.Execute( 50, mem, true );
     // cpu.printRegFlags();
 
 
@@ -57,7 +58,7 @@ int main( int argc, char *argv[] ) {
                 //     }
                 // }
 
-                // cpu.Execute( 50, mem, false ); // Still a cycles issue
+                cpu.Execute( 50, mem, false ); // Still a cycles issue
 
                 // Text rendering
                 W_RenderTextBuffer( renderer );

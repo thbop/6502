@@ -336,8 +336,9 @@ struct CPU {
 
         // Graphics monitoring
         // Bad code structure, maybe: https://stackoverflow.com/questions/9568150/what-is-a-c-delegate (Option 3)
-        
-
+        if ( AbsAddr == 0xD013 ) {
+            W_PushText( memory[0xD012] );
+        }
     }
 
 
@@ -552,7 +553,7 @@ struct CPU {
         INS_JSR = 0x20;
 
     void Execute( u32 Cycles, Mem& memory, bool debug ) {
-        while ((int)Cycles > 0) { // Maybe make a while true till a draw call.
+        // while ((int)Cycles > 0) {
             Byte Ins = FetchByte( Cycles, memory );
 
             // Debug
@@ -1051,7 +1052,6 @@ struct CPU {
                     Cycles -= 3;
                 } break;
                 case INS_RTS: {
-                    printf( "%p\n", SP );
                     PC = Pull( Cycles, memory );
                     Cycles -= 3;
                 } break;
@@ -1076,7 +1076,7 @@ struct CPU {
                 } break;
             }
         }
-    }
+    // }
     void printRegFlags() {
         printf("A = 0x%x\n", A);
         printf("X = 0x%x\n", X);

@@ -5,13 +5,10 @@ KBDCR            = $D011
 DSP              = $D012        ; Display
 DSPCR            = $D013        ; Decides when a char is set.
 
-                LDA #$11        ; Some random place to go to after execution
-                PHA
-                PHA
 
                 LDA #'H'
                 JSR ECHO
-                RTS
+                JMP WAIT
 
 ECHO:           STA DSP
                 LDA #01
@@ -20,3 +17,5 @@ ECHO:           STA DSP
                 STA DSPCR
                 RTS
 
+WAIT:           LDA #80
+                BMI WAIT

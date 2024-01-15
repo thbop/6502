@@ -1,2 +1,3 @@
 Get OpenGL for SDL and make frag shader for CRT something screen; bloom
 
+Fix H
