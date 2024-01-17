@@ -5,7 +5,6 @@ parser = argparse.ArgumentParser(description='A simple hexdump program')
 
 parser.add_argument('-f', type=str, help='The required file specifier')
 
-parser.add_argument('-s', type=str, required=False, help='Optional export mode; saves export to file.')
 
 args = parser.parse_args()
 
@@ -33,11 +32,3 @@ for j in range( 0, len(data), 32 ):
 
 
 
-# Save in an easy format
-if args.s != None:
-    out_file = ''
-    for i in range( 0, len(data), 2 ):
-        out_file += (data[i] + data[i+1]).upper() + '\n'
-    out_file = out_file.rstrip()
-    with open(args.s, 'w') as f:
-        f.write(out_file)

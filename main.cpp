@@ -16,7 +16,9 @@ int main( int argc, char *argv[] ) {
     CPU cpu;
     cpu.Reset( mem );
 
-    mem.LoadFile("thbop.bin");
+    mem.LoadFile("thbop.out");
+
+
     // cpu.Execute( 50, mem, true );
     // cpu.printRegFlags();
 

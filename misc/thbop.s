@@ -6,7 +6,7 @@ DSP              = $D012        ; Display
 DSPCR            = $D013        ; Decides when a char is set.
 
 
-                LDA #'H'
+MAIN:           LDA #'H'
                 JSR ECHO
                 LDA #'e'
                 JSR ECHO
@@ -33,6 +33,8 @@ DSPCR            = $D013        ; Decides when a char is set.
                 
                 JMP WAIT
 
+RESET:          JSR MAIN
+
 ECHO:           STA DSP
                 LDA #01
                 STA DSPCR       ; My odd way to detect a character change
@@ -41,3 +43,8 @@ ECHO:           STA DSP
 
 WAIT:           LDA #80
                 BMI WAIT
+
+.segment "VECTORS"
+                .WORD $0000
+                .WORD RESET
+                .WORD RESET

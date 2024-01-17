@@ -1,3 +1,7 @@
 Get OpenGL for SDL and make frag shader for CRT something screen; bloom
 
 Find out how BRK and Interrupt handlers work
+
+Game ideas
+    Tetris
+    Minesweeper

@@ -79,10 +79,10 @@ struct Mem {
         if (fp == NULL) {
             printf("Could not open file.\n");
         }
-        char line[MAX_MEM - 0x206]; // Max memory - 256 * 2 + 6
-        for (int i = 0; fgets(line, sizeof(line), fp); i++) {
-            int value = strtol(line, NULL, 16);
-            Data[i + startAddress] = (Byte)value;
+        int i = startAddress;
+        while ( (Data[i] = fgetc(fp)) != EOF ) {
+            i++;
+            if (i > 0xFFFF) { break; }
         }
         fclose(fp);
     }
@@ -90,6 +90,9 @@ struct Mem {
         for (Word i = start; i <= end; i++) {
             printf("%p: %p\n", i, Data[i]);
         }
+    }
+    void PrintAddr( Word Address ) {
+        printf( "%x\n", Data[Address] );
     }
 };
 
