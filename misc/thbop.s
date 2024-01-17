@@ -31,6 +31,7 @@ MAIN:           LDA #'H'
                 LDA #'!'
                 JSR ECHO
                 
+                LDA #$80
                 JMP WAIT
 
 RESET:          JSR MAIN
@@ -41,10 +42,9 @@ ECHO:           STA DSP
                 STY DSPCR
                 RTS
 
-WAIT:           LDA #80
-                BMI WAIT
+WAIT:           BMI RESET
 
 .segment "VECTORS"
-                .WORD $0000
-                .WORD RESET
-                .WORD RESET
+                .WORD $0000     ; non-maskable interrupt handler
+                .WORD RESET     ; power on reset
+                .WORD $0000     ; BRK/interrupt request handler

@@ -45,11 +45,11 @@ struct Mem {
     */
     Byte Data[MAX_MEM];
 
-    void Initialize() {
-        for ( u32 i = 0; i < MAX_MEM; i++ ) {
-            Data[i] = 0;
-        }
-    }
+    // void Initialize() {
+    //     for ( u32 i = 0; i < MAX_MEM; i++ ) {
+    //         Data[i] = 0;
+    //     }
+    // }
 
     // Read 1 byte
     Byte operator[]( u32 Address ) const {
@@ -113,12 +113,12 @@ struct CPU {
 
 
     void Reset( Mem& memory ) {
-        PC = 0x8000; // Natively 0xFFFC
+        PC = ReadWord( 0xFFFC, memory ); // Natively 0xFFFC
         SP = 0x01FF;
         C = Z = I = D = B = V = N = 0;
         A = X = Y = 0;
 
-        memory.Initialize();
+        // memory.Initialize();
     }
 
     // Fetch, Read, Write
@@ -165,6 +165,12 @@ struct CPU {
         Word Data = memory[Address];
         Data |= (memory[Address + 1] << 8 ); // Combines two Bytes into a Word
         Cycles -= 2;
+
+        return Data;
+    }
+    Word ReadWord( Word Address, Mem& memory ) {
+        Word Data = memory[Address];
+        Data |= (memory[Address + 1] << 8 ); // Combines two Bytes into a Word
 
         return Data;
     }
@@ -701,7 +707,7 @@ struct CPU {
                     if ( !C ) {
                         Cycles--;
                         Word OldPC = PC;
-                        PC += Offset;
+                        PC += Offset + 1;
                         // Check if page is crossed
                         if ( ( PC & 0xFF00 ) > ( OldPC & 0xFF00 ) ) {
                             Cycles -= 2;
@@ -714,7 +720,7 @@ struct CPU {
                     if ( C ) {
                         Cycles--;
                         Word OldPC = PC;
-                        PC += Offset;
+                        PC += Offset + 1;
                         // Check if page is crossed
                         if ( ( PC & 0xFF00 ) > ( OldPC & 0xFF00 ) ) {
                             Cycles -= 2;
@@ -727,7 +733,7 @@ struct CPU {
                     if ( Z ) {
                         Cycles--;
                         Word OldPC = PC;
-                        PC += Offset;
+                        PC += Offset + 1;
                         // Check if page is crossed
                         if ( ( PC & 0xFF00 ) > ( OldPC & 0xFF00 ) ) {
                             Cycles -= 2;
@@ -735,12 +741,12 @@ struct CPU {
                     }
                     else { PC++; }
                 } break;
-                case INS_BMI: { // Untested
+                case INS_BMI: {
                     SByte Offset = FetchSByte( Cycles, memory, false );
                     if ( N ) {
                         Cycles--;
                         Word OldPC = PC;
-                        PC += Offset;
+                        PC += Offset + 1; // For some reason the +1 makes it work
                         // Check if page is crossed
                         if ( ( PC & 0xFF00 ) > ( OldPC & 0xFF00 ) ) {
                             Cycles -= 2;
@@ -753,7 +759,7 @@ struct CPU {
                     if ( !Z ) {
                         Cycles--;
                         Word OldPC = PC;
-                        PC += Offset;
+                        PC += Offset + 1;
                         // Check if page is crossed
                         if ( ( PC & 0xFF00 ) > ( OldPC & 0xFF00 ) ) {
                             Cycles -= 2;
@@ -766,7 +772,7 @@ struct CPU {
                     if ( !N ) {
                         Cycles--;
                         Word OldPC = PC;
-                        PC += Offset;
+                        PC += Offset + 1;
                         // Check if page is crossed
                         if ( ( PC & 0xFF00 ) > ( OldPC & 0xFF00 ) ) {
                             Cycles -= 2;
@@ -779,7 +785,7 @@ struct CPU {
                     if ( !V ) {
                         Cycles--;
                         Word OldPC = PC;
-                        PC += Offset;
+                        PC += Offset + 1;
                         // Check if page is crossed
                         if ( ( PC & 0xFF00 ) > ( OldPC & 0xFF00 ) ) {
                             Cycles -= 2;
@@ -792,7 +798,7 @@ struct CPU {
                     if ( V ) {
                         Cycles--;
                         Word OldPC = PC;
-                        PC += Offset;
+                        PC += Offset + 1;
                         // Check if page is crossed
                         if ( ( PC & 0xFF00 ) > ( OldPC & 0xFF00 ) ) {
                             Cycles -= 2;
