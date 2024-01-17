@@ -6,7 +6,7 @@ DSP              = $D012        ; Display
 DSPCR            = $D013        ; Decides when a char is set.
 
 
-MAIN:           LDA #'H'
+HELLOWORLD:     LDA #'H'
                 JSR ECHO
                 LDA #'e'
                 JSR ECHO
@@ -30,11 +30,13 @@ MAIN:           LDA #'H'
                 JSR ECHO
                 LDA #'!'
                 JSR ECHO
+
+                RTS
                 
+
+RESET:          JSR HELLOWORLD
                 LDA #$80
                 JMP WAIT
-
-RESET:          JSR MAIN
 
 ECHO:           STA DSP
                 LDA #01

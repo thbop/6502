@@ -67,10 +67,10 @@ struct Mem {
     }
 
     // Writes two bytes
-    void WriteWord( Word Value, u32 Address, u32& Cycles ) {
+    void WriteWord( Word Value, u32 Address ) {
         Data[Address] = Value & 0xFF;
         Data[Address + 1] = (Value >> 8);
-        Cycles -= 2;
+        
     }
 
     void LoadFile( const char *filename, Word startAddress=0x8000 ) {
@@ -113,7 +113,7 @@ struct CPU {
 
 
     void Reset( Mem& memory ) {
-        PC = ReadWord( 0xFFFC, memory ); // Natively 0xFFFC
+        PC = ReadWord( (Word)0xFFFC, memory ); // Natively 0xFFFC
         SP = 0x01FF;
         C = Z = I = D = B = V = N = 0;
         A = X = Y = 0;
@@ -122,58 +122,53 @@ struct CPU {
     }
 
     // Fetch, Read, Write
-    Byte FetchByte( u32& Cycles, Mem& memory, bool IncrementPC = true ) {
+    Byte FetchByte( Mem& memory, bool IncrementPC = true ) {
         Byte Data = memory[PC];
         if ( IncrementPC ) { PC++; }
-        Cycles--;
+        
         return Data;
     }
-    SByte FetchSByte( u32& Cycles, Mem& memory, bool IncrementPC = true ) {
-        return FetchByte( Cycles, memory, IncrementPC );
+    SByte FetchSByte( Mem& memory, bool IncrementPC = true ) {
+        return FetchByte( memory, IncrementPC );
     }
 
-    Word FetchWord( u32& Cycles, Mem& memory ) {
+    Word FetchWord( Mem& memory ) {
         Word Data = memory[PC];
         PC++;
 
         Data |= (memory[PC] << 8 ); // Combines two Bytes into a Word
         PC++;
-        Cycles -= 2;
+        
 
         return Data;
     }
 
-    Byte ReadByte( Byte Address, u32& Cycles, Mem& memory ) {
+    Byte ReadByte( Byte Address, Mem& memory ) {
         Byte Data = memory[Address];
-        Cycles--;
+        
         return Data;
     }
-    Byte ReadByte( Word Address, u32& Cycles, Mem& memory ) {
+    Byte ReadByte( Word Address, Mem& memory ) {
         Byte Data = memory[Address];
-        Cycles--;
+        
         return Data;
     }
 
-    Word ReadWord( Byte Address, u32& Cycles, Mem& memory ) {
+    Word ReadWord( Byte Address, Mem& memory ) {
         Word Data = memory[Address];
         Data |= (memory[Address + 1] << 8 ); // Combines two Bytes into a Word
-        Cycles -= 2;
-
-        return Data;
-    }
-    Word ReadWord( Word Address, u32& Cycles, Mem& memory ) {
-        Word Data = memory[Address];
-        Data |= (memory[Address + 1] << 8 ); // Combines two Bytes into a Word
-        Cycles -= 2;
+        
 
         return Data;
     }
     Word ReadWord( Word Address, Mem& memory ) {
         Word Data = memory[Address];
         Data |= (memory[Address + 1] << 8 ); // Combines two Bytes into a Word
+        
 
         return Data;
     }
+
 
 
     // Helper functions
@@ -204,27 +199,27 @@ struct CPU {
         N = ( 0b10000000 & Value ) > 0;
     }
 
-    void LSR( Byte& Value, u32& Cycles ) { // Handles SetStatus and takes 1 cycle
+    void LSR( Byte& Value ) { // Handles SetStatus and takes 1 cycle
         Byte BitZero = (0b00000001 & Value);
         Value = (Value >> 1);
-        Cycles--;
+        
         LSRSetStatus( BitZero, Value );
     }
 
-    void ROL( Byte& Value, u32& Cycles ) { // Handles SetStatus and takes 1 cycle
+    void ROL( Byte& Value ) { // Handles SetStatus and takes 1 cycle
         Byte OldByte = Value;
         Value = ( Value << 1 );
         Value |= C; // Could also be +=
         ROLSetStatus( Value, OldByte );
-        Cycles--;
+        
     }
 
-    void ROR( Byte& Value, u32& Cycles ) { // Handles SetStatus and takes 1 cycle
+    void ROR( Byte& Value ) { // Handles SetStatus and takes 1 cycle
         Byte OldByte = Value;
         Value = ( Value << 1 );
         Value |= C; // Could also be +=
         RORSetStatus( Value, OldByte );
-        Cycles--;
+        
     }
 
     void ADC( Byte Value ) { // Takes 0 cycles and sets status
@@ -246,17 +241,17 @@ struct CPU {
         SetGenericStatus( A );
     }
 
-    void ASL( Byte& Value, u32& Cycles ) { // handles flags and takes 1 cycle
+    void ASL( Byte& Value ) { // handles flags and takes 1 cycle
         C = ( Value & 0b10000000 ) > 0;
         Value = ( Value << 1 );
-        Cycles--;
+        
         SetGenericStatus( Value );
     }
 
-    void CheckPageOverflow( Word Value, Byte Adder, u32& Cycles ) {
+    void CheckPageOverflow( Word Value, Byte Adder ) {
         Value &= 0x00FF;
         Value += Adder;
-        if (Value > 0xFF) { Cycles--; }
+        if (Value > 0xFF) {  }
     }
 
     Byte CombineFlags() {
@@ -280,69 +275,69 @@ struct CPU {
     
 
     // Addressing modes
-    Byte LoadZeroPage( u32& Cycles, Mem& memory ) { // 2 cycles
-        Byte ZeroPageAddr = FetchByte( Cycles, memory );
-        return ReadByte( ZeroPageAddr, Cycles, memory );
+    Byte LoadZeroPage( Mem& memory ) { // 2 cycles
+        Byte ZeroPageAddr = FetchByte( memory );
+        return ReadByte( ZeroPageAddr, memory );
     }
-    Byte LoadZeroPage( u32& Cycles, Mem& memory, Byte& ZeroPageAddr ) { // 2 cycles
-        ZeroPageAddr = FetchByte( Cycles, memory );
-        return ReadByte( ZeroPageAddr, Cycles, memory );
+    Byte LoadZeroPage( Mem& memory, Byte& ZeroPageAddr ) { // 2 cycles
+        ZeroPageAddr = FetchByte( memory );
+        return ReadByte( ZeroPageAddr, memory );
     }
 
-    void WriteZeroPage( Byte& From, u32& Cycles, Mem& memory ) { // 2 cycles
-        Byte ZeroPageAddr = FetchByte( Cycles, memory );
+    void WriteZeroPage( Byte& From, Mem& memory ) { // 2 cycles
+        Byte ZeroPageAddr = FetchByte( memory );
         memory[ZeroPageAddr] = From;
-        Cycles--;
+        
     }
     
-    Byte LoadZeroPageX( u32& Cycles, Mem& memory ) { // 3 cycles
-        Byte ZeroPageAddr = FetchByte( Cycles, memory );
+    Byte LoadZeroPageX( Mem& memory ) { // 3 cycles
+        Byte ZeroPageAddr = FetchByte( memory );
         ZeroPageAddr += X; // Wraps around the Zero Page
-        Cycles--;
+        
 
-        return ReadByte( ZeroPageAddr, Cycles, memory );
+        return ReadByte( ZeroPageAddr, memory );
     }
-    Byte LoadZeroPageX( u32& Cycles, Mem& memory, Byte& ZeroPageAddr ) { // 3 cycles
-        ZeroPageAddr = FetchByte( Cycles, memory );
+    Byte LoadZeroPageX( Mem& memory, Byte& ZeroPageAddr ) { // 3 cycles
+        ZeroPageAddr = FetchByte( memory );
         ZeroPageAddr += X; // Wraps around the Zero Page
-        Cycles--;
+        
 
-        return ReadByte( ZeroPageAddr, Cycles, memory );
+        return ReadByte( ZeroPageAddr, memory );
     }
 
-    void WriteZeroPageX( Byte& From, u32& Cycles, Mem& memory ) { // 3 cycles - untested
-        Byte ZeroPageAddr = FetchByte( Cycles, memory ) + X;
+    void WriteZeroPageX( Byte& From, Mem& memory ) { // 3 cycles - untested
+        Byte ZeroPageAddr = FetchByte( memory ) + X;
         memory[ZeroPageAddr] = From;
-        Cycles -= 2;
+        
     }
 
-    Byte LoadZeroPageY( u32& Cycles, Mem& memory ) { // 3 cycles
-        Byte ZeroPageAddr = FetchByte( Cycles, memory );
+    Byte LoadZeroPageY( Mem& memory ) { // 3 cycles
+        Byte ZeroPageAddr = FetchByte( memory );
         ZeroPageAddr += Y; // Wraps around the Zero Page
-        Cycles--;
+        
 
-        return ReadByte( ZeroPageAddr, Cycles, memory );
+        return ReadByte( ZeroPageAddr, memory );
     }
 
-    void WriteZeroPageY( Byte& From, u32& Cycles, Mem& memory ) { // 3 cycles - untested
-        Byte ZeroPageAddr = FetchByte( Cycles, memory ) + Y;
+    void WriteZeroPageY( Byte& From, Mem& memory ) { // 3 cycles - untested
+        Byte ZeroPageAddr = FetchByte( memory ) + Y;
         memory[ZeroPageAddr] = From;
-        Cycles -= 2;
+        
     }
 
-    Byte LoadAbsolute( u32& Cycles, Mem& memory ) { // 3 cycles
-        Word AbsAddr = FetchWord( Cycles, memory );
-        return ReadByte( AbsAddr, Cycles, memory );
+    Byte LoadAbsolute( Mem& memory ) { // 3 cycles
+        Word AbsAddr = FetchWord( memory );
+        return ReadByte( AbsAddr, memory );
     }
-    Byte LoadAbsolute( u32& Cycles, Mem& memory, Word& AbsAddr ) { // 3 cycles
-        AbsAddr = FetchWord( Cycles, memory );
-        return ReadByte( AbsAddr, Cycles, memory );
+    Byte LoadAbsolute( Mem& memory, Word& AbsAddr ) { // 3 cycles
+        AbsAddr = FetchWord( memory );
+        return ReadByte( AbsAddr, memory );
     }
 
-    void WriteAbsolute( Byte& From, u32& Cycles, Mem& memory ) { // 3 cycles
-        Word AbsAddr = FetchWord( Cycles, memory );
+    void WriteAbsolute( Byte& From, Mem& memory ) { // 3 cycles
+        Word AbsAddr = FetchWord( memory );
         memory[AbsAddr] = From;
-        Cycles--;
+        
 
 
         // Printer stuff; not very realistic but still funny
@@ -358,71 +353,71 @@ struct CPU {
     }
 
 
-    Byte LoadAbsoluteX( u32& Cycles, Mem& memory, bool PageCrossable=true ) { // 3-4 cycles
-        Word AbsAddr = FetchWord( Cycles, memory );
+    Byte LoadAbsoluteX( Mem& memory, bool PageCrossable=true ) { // 3-4 cycles
+        Word AbsAddr = FetchWord( memory );
         AbsAddr += X;
-        if (PageCrossable) { CheckPageOverflow( AbsAddr, X, Cycles ); } // Checks if the LSB crossed the page
-        return ReadByte( AbsAddr, Cycles, memory );
+        if (PageCrossable) { CheckPageOverflow( AbsAddr, X ); } // Checks if the LSB crossed the page
+        return ReadByte( AbsAddr, memory );
     }
-    Byte LoadAbsoluteX( u32& Cycles, Mem& memory, Word& AbsAddr, bool PageCrossable=true ) { // 3-4 cycles
-        AbsAddr = FetchWord( Cycles, memory );
+    Byte LoadAbsoluteX( Mem& memory, Word& AbsAddr, bool PageCrossable=true ) { // 3-4 cycles
+        AbsAddr = FetchWord( memory );
         AbsAddr += X;
-        if (PageCrossable) { CheckPageOverflow( AbsAddr, X, Cycles ); } // Checks if the LSB crossed the page
-        return ReadByte( AbsAddr, Cycles, memory );
+        if (PageCrossable) { CheckPageOverflow( AbsAddr, X ); } // Checks if the LSB crossed the page
+        return ReadByte( AbsAddr, memory );
     }
 
-    void WriteAbsoluteX( Byte& From, u32& Cycles, Mem& memory ) { // 4 cycles - untested
-        Word AbsAddr = FetchWord( Cycles, memory ) + X;
+    void WriteAbsoluteX( Byte& From, Mem& memory ) { // 4 cycles - untested
+        Word AbsAddr = FetchWord( memory ) + X;
         memory[AbsAddr] = From;
-        Cycles -= 2;
+        
     }
 
-    Byte LoadAbsoluteY( u32& Cycles, Mem& memory, bool PageCrossable=true ) { // 3-4 cycles
-        Word AbsAddr = FetchWord( Cycles, memory );
+    Byte LoadAbsoluteY( Mem& memory, bool PageCrossable=true ) { // 3-4 cycles
+        Word AbsAddr = FetchWord( memory );
         AbsAddr += Y;
-        if (PageCrossable) { CheckPageOverflow( AbsAddr, Y, Cycles ); }
-        return ReadByte( AbsAddr, Cycles, memory );
+        if (PageCrossable) { CheckPageOverflow( AbsAddr, Y ); }
+        return ReadByte( AbsAddr, memory );
     }
 
-    void WriteAbsoluteY( Byte& From, u32& Cycles, Mem& memory ) { // 4 cycles - untested
-        Word AbsAddr = FetchWord( Cycles, memory ) + Y;
+    void WriteAbsoluteY( Byte& From, Mem& memory ) { // 4 cycles - untested
+        Word AbsAddr = FetchWord( memory ) + Y;
         memory[AbsAddr] = From;
-        Cycles -= 2;
+        
     }
 
-    Byte LoadIndirectX( u32& Cycles, Mem& memory ) { // 5 cycles
-        Byte ZeroPageAddr = FetchByte( Cycles, memory );
+    Byte LoadIndirectX( Mem& memory ) { // 5 cycles
+        Byte ZeroPageAddr = FetchByte( memory );
         ZeroPageAddr += X; // Wrap around Zero Page
-        Cycles--;
+        
 
-        Word TargetAddr = ReadWord( ZeroPageAddr, Cycles, memory );
-        return ReadByte( TargetAddr, Cycles, memory );
+        Word TargetAddr = ReadWord( ZeroPageAddr, memory );
+        return ReadByte( TargetAddr, memory );
     }
 
-    void WriteIndirectX( Byte& From, u32& Cycles, Mem& memory ) { // 5 cycles - untested
-        Byte ZeroPageAddr = FetchWord( Cycles, memory ) + X;
-        Word TargetAddr = ReadWord( ZeroPageAddr, Cycles, memory );
+    void WriteIndirectX( Byte& From, Mem& memory ) { // 5 cycles - untested
+        Byte ZeroPageAddr = FetchWord( memory ) + X;
+        Word TargetAddr = ReadWord( ZeroPageAddr, memory );
         memory[TargetAddr] = From;
 
-        Cycles--;
+        
     }
 
-    Byte LoadIndirectY( u32& Cycles, Mem& memory ) { // 4-5 cycles
-        Byte ZeroPageAddr = FetchByte( Cycles, memory );
+    Byte LoadIndirectY( Mem& memory ) { // 4-5 cycles
+        Byte ZeroPageAddr = FetchByte( memory );
 
-        Word TargetAddr = ReadWord( ZeroPageAddr, Cycles, memory );
-        CheckPageOverflow( TargetAddr, Y, Cycles );
+        Word TargetAddr = ReadWord( ZeroPageAddr, memory );
+        CheckPageOverflow( TargetAddr, Y );
         TargetAddr += Y;
                     
-        return ReadByte( TargetAddr, Cycles, memory );
+        return ReadByte( TargetAddr, memory );
     }
 
-    void WriteIndirectY( Byte& From, u32& Cycles, Mem& memory ) { // 5 cycles - untested
-        Byte ZeroPageAddr = FetchWord( Cycles, memory );
-        Word TargetAddr = ReadWord( ZeroPageAddr, Cycles, memory ) + Y;
+    void WriteIndirectY( Byte& From, Mem& memory ) { // 5 cycles - untested
+        Byte ZeroPageAddr = FetchWord( memory );
+        Word TargetAddr = ReadWord( ZeroPageAddr, memory ) + Y;
         memory[TargetAddr] = From;
 
-        Cycles--;
+        
     }
 
     // Stack operations
@@ -430,18 +425,18 @@ struct CPU {
         memory[SP] = Value;
         SP--;
     }
-    void Push( Word Value, u32& Cycles, Mem& memory ) {
-        memory.WriteWord( Value, SP - 1, Cycles );
+    void Push( Word Value, Mem& memory ) {
+        memory.WriteWord( Value, SP - 1 );
         SP -= 2;
     }
-    Byte Pull( Mem& memory ) {
+    Byte PullByte( Mem& memory ) {
         SP++;
         Byte Value = memory[SP];
         return Value;
     }
-    Word Pull( u32& Cycles, Mem& memory ) {
+    Word PullWord( Mem& memory ) {
         SP++;
-        Word Value = ReadWord( SP, Cycles, memory );
+        Word Value = ReadWord( SP, memory );
         SP++;
         return Value;
     }
@@ -578,230 +573,228 @@ struct CPU {
         INS_JMP_IND = 0x6C,
         INS_JSR = 0x20;
 
-    void Execute( u32 Cycles, Mem& memory, bool debug ) {
-        // while ((int)Cycles > 0) {
-            Byte Ins = FetchByte( Cycles, memory );
+    void Execute( Mem& memory, bool debug ) {
+            Byte Ins = FetchByte( memory );
 
             // Debug
             if (debug) {
                 printf("PC: %p | ", PC);
                 printf("Instruction: 0x%x | ", Ins);
-                printf("A: 0x%x | ", A);
-                printf("Cycles: %d\n", Cycles);
+                printf("A: 0x%x |\n", A);
             }
             
 
             switch( Ins ) {
                 // ADC
                 case INS_ADC_IM: {
-                    Byte Value = FetchByte( Cycles, memory );
+                    Byte Value = FetchByte( memory );
                     ADC( Value );
                 } break;
                 case INS_ADC_ZP: {
-                    Byte Value = LoadZeroPage( Cycles, memory );
+                    Byte Value = LoadZeroPage( memory );
                     ADC( Value );
                 } break;
                 case INS_ADC_ZPX: {
-                    Byte Value = LoadZeroPageX( Cycles, memory );
+                    Byte Value = LoadZeroPageX( memory );
                     ADC( Value );
                 } break;
                 case INS_ADC_ABS: {
-                    Byte Value = LoadAbsolute( Cycles, memory );
+                    Byte Value = LoadAbsolute( memory );
                     ADC( Value );
                 } break;
                 case INS_ADC_ABX: {
-                    Byte Value = LoadAbsoluteX( Cycles, memory );
+                    Byte Value = LoadAbsoluteX( memory );
                     ADC( Value );
                 } break;
                 case INS_ADC_ABY: {
-                    Byte Value = LoadAbsoluteY( Cycles, memory );
+                    Byte Value = LoadAbsoluteY( memory );
                     ADC( Value );
                 } break;
                 case INS_ADC_IX: {
-                    Byte Value = LoadIndirectX( Cycles, memory );
+                    Byte Value = LoadIndirectX( memory );
                     ADC( Value );
                 } break;
                 case INS_ADC_IY: {
-                    Byte Value = LoadIndirectY( Cycles, memory );
+                    Byte Value = LoadIndirectY( memory );
                     ADC( Value );
                 } break;
 
                 // AND
                 case INS_AND_IM: {
-                    Byte Value = FetchByte( Cycles, memory );
+                    Byte Value = FetchByte( memory );
                     A &= Value;
                     SetGenericStatus( A );
                 } break;
                 case INS_AND_ZP: {
-                    Byte Value = LoadZeroPage( Cycles, memory );
+                    Byte Value = LoadZeroPage( memory );
                     A &= Value;
                     SetGenericStatus( A );
                 } break;
                 case INS_AND_ZPX: {
-                    Byte Value = LoadZeroPageX( Cycles, memory );
+                    Byte Value = LoadZeroPageX( memory );
                     A &= Value;
                     SetGenericStatus( A );
                 } break;
                 case INS_AND_ABS: {
-                    Byte Value = LoadAbsolute( Cycles, memory );
+                    Byte Value = LoadAbsolute( memory );
                     A &= Value;
                     SetGenericStatus( A );
                 } break;
                 case INS_AND_ABX: {
-                    Byte Value = LoadAbsoluteX( Cycles, memory );
+                    Byte Value = LoadAbsoluteX( memory );
                     A &= Value;
                     SetGenericStatus( A );
                 } break;
                 case INS_AND_ABY: {
-                    Byte Value = LoadAbsoluteY( Cycles, memory );
+                    Byte Value = LoadAbsoluteY( memory );
                     A &= Value;
                     SetGenericStatus( A );
                 } break;
                 case INS_AND_IX: {
-                    Byte Value = LoadIndirectX( Cycles, memory );
+                    Byte Value = LoadIndirectX( memory );
                     A &= Value;
                     SetGenericStatus( A );
                 } break;
                 case INS_AND_IY: {
-                    Byte Value = LoadIndirectY( Cycles, memory );
+                    Byte Value = LoadIndirectY( memory );
                     A &= Value;
                     SetGenericStatus( A );
                 } break;
 
                 // ASL
                 case INS_ASL_ACC: {
-                    ASL( A, Cycles );
+                    ASL( A );
                 } break;
                 case INS_ASL_ZP: {
                     Byte ZeroPageAddr;
-                    Byte Value = LoadZeroPage( Cycles, memory, ZeroPageAddr );
-                    ASL( Value, Cycles );
+                    Byte Value = LoadZeroPage( memory, ZeroPageAddr );
+                    ASL( Value );
                     memory[ZeroPageAddr] = Value;
-                    Cycles--;
+                    
                 } break;
                 case INS_ASL_ZPX: {
                     Byte ZeroPageAddr;
-                    Byte Value = LoadZeroPageX( Cycles, memory, ZeroPageAddr );
-                    ASL( Value, Cycles );
+                    Byte Value = LoadZeroPageX( memory, ZeroPageAddr );
+                    ASL( Value );
                     memory[ZeroPageAddr] = Value;
-                    Cycles--;
+                    
                 } break;
                 case INS_ASL_ABS: {
                     Word AbsAddr;
-                    Byte Value = LoadAbsolute( Cycles, memory, AbsAddr );
-                    ASL( Value, Cycles );
+                    Byte Value = LoadAbsolute( memory, AbsAddr );
+                    ASL( Value );
                     memory[AbsAddr] = Value;
-                    Cycles--;
+                    
                 } break;
                 case INS_ASL_ABX: {
                     Word AbsAddr;
-                    Byte Value = LoadAbsoluteX( Cycles, memory, AbsAddr, false );
-                    ASL( Value, Cycles );
+                    Byte Value = LoadAbsoluteX( memory, AbsAddr, false );
+                    ASL( Value );
                     memory[AbsAddr] = Value;
-                    Cycles -= 2;
+                    
                 } break;
 
                 // Branch
                 case INS_BCC: {
-                    SByte Offset = FetchSByte( Cycles, memory, false );
+                    SByte Offset = FetchSByte( memory, false );
                     if ( !C ) {
-                        Cycles--;
+                        
                         Word OldPC = PC;
                         PC += Offset + 1;
                         // Check if page is crossed
                         if ( ( PC & 0xFF00 ) > ( OldPC & 0xFF00 ) ) {
-                            Cycles -= 2;
+                            
                         }
                     }
                     else { PC++; } // Increment PC if failure, otherwise it tries to parse argument as instruction
                 } break;
                 case INS_BCS: {
-                    SByte Offset = FetchSByte( Cycles, memory, false );
+                    SByte Offset = FetchSByte( memory, false );
                     if ( C ) {
-                        Cycles--;
+                        
                         Word OldPC = PC;
                         PC += Offset + 1;
                         // Check if page is crossed
                         if ( ( PC & 0xFF00 ) > ( OldPC & 0xFF00 ) ) {
-                            Cycles -= 2;
+                            
                         }
                     }
                     else { PC++; }
                 } break;
                 case INS_BEQ: {
-                    SByte Offset = FetchSByte( Cycles, memory, false );
+                    SByte Offset = FetchSByte( memory, false );
                     if ( Z ) {
-                        Cycles--;
+                        
                         Word OldPC = PC;
                         PC += Offset + 1;
                         // Check if page is crossed
                         if ( ( PC & 0xFF00 ) > ( OldPC & 0xFF00 ) ) {
-                            Cycles -= 2;
+                            
                         }
                     }
                     else { PC++; }
                 } break;
                 case INS_BMI: {
-                    SByte Offset = FetchSByte( Cycles, memory, false );
+                    SByte Offset = FetchSByte( memory, false );
                     if ( N ) {
-                        Cycles--;
+                        
                         Word OldPC = PC;
                         PC += Offset + 1; // For some reason the +1 makes it work
                         // Check if page is crossed
                         if ( ( PC & 0xFF00 ) > ( OldPC & 0xFF00 ) ) {
-                            Cycles -= 2;
+                            
                         }
                     }
                     else { PC++; }
                 } break;
                 case INS_BNE: { // Untested
-                    SByte Offset = FetchSByte( Cycles, memory, false );
+                    SByte Offset = FetchSByte( memory, false );
                     if ( !Z ) {
-                        Cycles--;
+                        
                         Word OldPC = PC;
                         PC += Offset + 1;
                         // Check if page is crossed
                         if ( ( PC & 0xFF00 ) > ( OldPC & 0xFF00 ) ) {
-                            Cycles -= 2;
+                            
                         }
                     }
                     else { PC++; }
                 } break;
                 case INS_BPL: { // Untested
-                    SByte Offset = FetchSByte( Cycles, memory, false );
+                    SByte Offset = FetchSByte( memory, false );
                     if ( !N ) {
-                        Cycles--;
+                        
                         Word OldPC = PC;
                         PC += Offset + 1;
                         // Check if page is crossed
                         if ( ( PC & 0xFF00 ) > ( OldPC & 0xFF00 ) ) {
-                            Cycles -= 2;
+                            
                         }
                     }
                     else { PC++; }
                 } break;
                 case INS_BVC: { // Untested
-                    SByte Offset = FetchSByte( Cycles, memory, false );
+                    SByte Offset = FetchSByte( memory, false );
                     if ( !V ) {
-                        Cycles--;
+                        
                         Word OldPC = PC;
                         PC += Offset + 1;
                         // Check if page is crossed
                         if ( ( PC & 0xFF00 ) > ( OldPC & 0xFF00 ) ) {
-                            Cycles -= 2;
+                            
                         }
                     }
                     else { PC++; }
                 } break;
                 case INS_BVS: { // Untested
-                    SByte Offset = FetchSByte( Cycles, memory, false );
+                    SByte Offset = FetchSByte( memory, false );
                     if ( V ) {
-                        Cycles--;
+                        
                         Word OldPC = PC;
                         PC += Offset + 1;
                         // Check if page is crossed
                         if ( ( PC & 0xFF00 ) > ( OldPC & 0xFF00 ) ) {
-                            Cycles -= 2;
+                            
                         }
                     }
                     else { PC++; }
@@ -810,313 +803,313 @@ struct CPU {
 
                 // BIT
                 case INS_BIT_ZP: {
-                    Byte Value = LoadZeroPage( Cycles, memory );
+                    Byte Value = LoadZeroPage( memory );
                     BITSsetStatus( Value );
                 } break;
                 case INS_BIT_ABS: {
-                    Byte Value = LoadAbsolute( Cycles, memory );
+                    Byte Value = LoadAbsolute( memory );
                     BITSsetStatus( Value );
                 } break;
 
                 // LDA
                 case INS_LDA_IM: {
-                    A = FetchByte( Cycles, memory );
+                    A = FetchByte( memory );
                     SetGenericStatus( A );
                 } break;
                 case INS_LDA_ZP: {
-                    A = LoadZeroPage( Cycles, memory );
+                    A = LoadZeroPage( memory );
                     SetGenericStatus( A );
                 } break;
                 case INS_LDA_ZPX: {
-                    A = LoadZeroPageX( Cycles, memory );
+                    A = LoadZeroPageX( memory );
                     SetGenericStatus( A );
                 } break;
                 case INS_LDA_ABS: {
-                    A = LoadAbsolute( Cycles, memory );
+                    A = LoadAbsolute( memory );
                     SetGenericStatus( A );
                 } break;
                 case INS_LDA_ABX: {
-                    A = LoadAbsoluteX( Cycles, memory );
+                    A = LoadAbsoluteX( memory );
                     SetGenericStatus( A );
                 } break;
                 case INS_LDA_ABY: {
-                    A = LoadAbsoluteY( Cycles, memory );
+                    A = LoadAbsoluteY( memory );
                     SetGenericStatus( A );
                 } break;
                 case INS_LDA_IX: {
-                    A = LoadIndirectX( Cycles, memory );
+                    A = LoadIndirectX( memory );
                     SetGenericStatus( A );
                 } break;
                 case INS_LDA_IY: {
-                    A = LoadIndirectY( Cycles, memory );
+                    A = LoadIndirectY( memory );
                     SetGenericStatus( A );
                 } break;
 
                 // LDX
                 case INS_LDX_IM: {
-                    X = FetchByte( Cycles, memory );
+                    X = FetchByte( memory );
                     SetGenericStatus( X );
                 } break;
                 case INS_LDX_ZP: {
-                    X = LoadZeroPage( Cycles, memory );
+                    X = LoadZeroPage( memory );
                     SetGenericStatus( X );
                 } break;
                 case INS_LDX_ZPY: {
-                    X = LoadZeroPageY( Cycles, memory );
+                    X = LoadZeroPageY( memory );
                     SetGenericStatus( X );
                 } break;
                 case INS_LDX_ABS: {
-                    X = LoadAbsolute( Cycles, memory );
+                    X = LoadAbsolute( memory );
                     SetGenericStatus( X );
                 } break;
                 case INS_LDX_ABY: {
-                    X = LoadAbsoluteY( Cycles, memory, false );
+                    X = LoadAbsoluteY( memory, false );
                     SetGenericStatus( X );
                 } break;
 
                 // LDY
                 case INS_LDY_IM: {
-                    Y = FetchByte( Cycles, memory );
+                    Y = FetchByte( memory );
                     SetGenericStatus( Y );
                 } break;
                 case INS_LDY_ZP: {
-                    Y = LoadZeroPage( Cycles, memory );
+                    Y = LoadZeroPage( memory );
                     SetGenericStatus( Y );
                 } break;
                 case INS_LDY_ZPX: {
-                    Y = LoadZeroPageX( Cycles, memory );
+                    Y = LoadZeroPageX( memory );
                     SetGenericStatus( Y );
                 } break;
                 case INS_LDY_ABS: {
-                    Y = LoadAbsolute( Cycles, memory );
+                    Y = LoadAbsolute( memory );
                     SetGenericStatus( Y );
                 } break;
                 case INS_LDY_ABX: {
-                    Y = LoadAbsoluteX( Cycles, memory );
+                    Y = LoadAbsoluteX( memory );
                     SetGenericStatus( Y );
                 } break;
 
                 // LSR
                 case INS_LSR_ACC: {
-                    LSR( A, Cycles ); // LSR handles SetStatus
+                    LSR( A ); // LSR handles SetStatus
                 } break;
                 case INS_LSR_ZP: {
                     Byte ZeroPageAddr;
-                    Byte Value = LoadZeroPage( Cycles, memory, ZeroPageAddr );
-                    LSR( Value, Cycles );
+                    Byte Value = LoadZeroPage( memory, ZeroPageAddr );
+                    LSR( Value );
                     memory[ZeroPageAddr] = Value;
-                    Cycles--;
+                    
                 } break;
                 case INS_LSR_ZPX: {
                     Byte ZeroPageAddr;
-                    Byte Value = LoadZeroPageX( Cycles, memory, ZeroPageAddr );
-                    LSR( Value, Cycles );
+                    Byte Value = LoadZeroPageX( memory, ZeroPageAddr );
+                    LSR( Value );
                     memory[ZeroPageAddr] = Value;
-                    Cycles--;
+                    
                 } break;
                 case INS_LSR_ABS: {
                     Word AbsAddr;
-                    Byte Value = LoadAbsolute( Cycles, memory, AbsAddr );
-                    LSR( Value, Cycles );
+                    Byte Value = LoadAbsolute( memory, AbsAddr );
+                    LSR( Value );
                     memory[AbsAddr] = Value;
-                    Cycles--;
+                    
                 } break;
                 case INS_LSR_ABX: {
                     Word AbsAddr;
-                    Byte Value = LoadAbsoluteX( Cycles, memory, AbsAddr, false );
-                    LSR( Value, Cycles );
+                    Byte Value = LoadAbsoluteX( memory, AbsAddr, false );
+                    LSR( Value );
                     memory[AbsAddr] = Value;
-                    Cycles -= 2;
+                    
                 } break;
 
                 // NOP
                 case INS_NOP: {
-                    Cycles--;
+                    
                 } break;
 
                 // ORA
                 case INS_ORA_IM: {
-                    A |= FetchByte( Cycles, memory );
+                    A |= FetchByte( memory );
                     SetGenericStatus( A );
                 } break;
                 case INS_ORA_ZP: {
-                    A |= LoadZeroPage( Cycles, memory );
+                    A |= LoadZeroPage( memory );
                     SetGenericStatus( A );
                 } break;
                 case INS_ORA_ZPX: {
-                    A |= LoadZeroPageX( Cycles, memory );
+                    A |= LoadZeroPageX( memory );
                     SetGenericStatus( A );
                 } break;
                 case INS_ORA_ABS: {
-                    A |= LoadAbsolute( Cycles, memory );
+                    A |= LoadAbsolute( memory );
                     SetGenericStatus( A );
                 } break;
                 case INS_ORA_ABX: {
-                    A |= LoadAbsoluteX( Cycles, memory );
+                    A |= LoadAbsoluteX( memory );
                     SetGenericStatus( A );
                 } break;
                 case INS_ORA_ABY: {
-                    A |= LoadAbsoluteY( Cycles, memory );
+                    A |= LoadAbsoluteY( memory );
                     SetGenericStatus( A );
                 } break;
                 case INS_ORA_IX: {
-                    A |= LoadIndirectX( Cycles, memory );
+                    A |= LoadIndirectX( memory );
                     SetGenericStatus( A );
                 } break;
                 case INS_ORA_IY: {
-                    A |= LoadIndirectY( Cycles, memory );
+                    A |= LoadIndirectY( memory );
                     SetGenericStatus( A );
                 } break;
 
                 // ROL
                 case INS_ROL_ACC: {
-                    ROL( A, Cycles );
+                    ROL( A );
                 } break;
                 case INS_ROL_ZP: {
                     Byte ZeroPageAddr;
-                    Byte Value = LoadZeroPage( Cycles, memory, ZeroPageAddr );
-                    ROL( Value, Cycles );
+                    Byte Value = LoadZeroPage( memory, ZeroPageAddr );
+                    ROL( Value );
                     memory[ZeroPageAddr] = Value;
-                    Cycles--;
+                    
                 } break;
                 case INS_ROL_ZPX: {
                     Byte ZeroPageAddr;
-                    Byte Value = LoadZeroPageX( Cycles, memory, ZeroPageAddr );
-                    ROL( Value, Cycles );
+                    Byte Value = LoadZeroPageX( memory, ZeroPageAddr );
+                    ROL( Value );
                     memory[ZeroPageAddr] = Value;
-                    Cycles--;
+                    
                 } break;
                 case INS_ROL_ABS: {
                     Word AbsAddr;
-                    Byte Value = LoadAbsolute( Cycles, memory, AbsAddr );
-                    ROL( Value, Cycles );
+                    Byte Value = LoadAbsolute( memory, AbsAddr );
+                    ROL( Value );
                     memory[AbsAddr] = Value;
-                    Cycles--;
+                    
                 } break;
                 case INS_ROL_ABX: {
                     Word AbsAddr;
-                    Byte Value = LoadAbsoluteX( Cycles, memory, AbsAddr, false );
-                    ROL( Value, Cycles );
+                    Byte Value = LoadAbsoluteX( memory, AbsAddr, false );
+                    ROL( Value );
                     memory[AbsAddr] = Value;
-                    Cycles -= 2;
+                    
                 } break;
 
                 // ROR - untested but very similar to ROL
                 case INS_ROR_ACC: {
-                    ROR( A, Cycles );
+                    ROR( A );
                 } break;
                 case INS_ROR_ZP: {
                     Byte ZeroPageAddr;
-                    Byte Value = LoadZeroPage( Cycles, memory, ZeroPageAddr );
-                    ROR( Value, Cycles );
+                    Byte Value = LoadZeroPage( memory, ZeroPageAddr );
+                    ROR( Value );
                     memory[ZeroPageAddr] = Value;
-                    Cycles--;
+                    
                 } break;
                 case INS_ROR_ZPX: {
                     Byte ZeroPageAddr;
-                    Byte Value = LoadZeroPageX( Cycles, memory, ZeroPageAddr );
-                    ROR( Value, Cycles );
+                    Byte Value = LoadZeroPageX( memory, ZeroPageAddr );
+                    ROR( Value );
                     memory[ZeroPageAddr] = Value;
-                    Cycles--;
+                    
                 } break;
                 case INS_ROR_ABS: {
                     Word AbsAddr;
-                    Byte Value = LoadAbsolute( Cycles, memory, AbsAddr );
-                    ROR( Value, Cycles );
+                    Byte Value = LoadAbsolute( memory, AbsAddr );
+                    ROR( Value );
                     memory[AbsAddr] = Value;
-                    Cycles--;
+                    
                 } break;
                 case INS_ROR_ABX: {
                     Word AbsAddr;
-                    Byte Value = LoadAbsoluteX( Cycles, memory, AbsAddr, false );
-                    ROR( Value, Cycles );
+                    Byte Value = LoadAbsoluteX( memory, AbsAddr, false );
+                    ROR( Value );
                     memory[AbsAddr] = Value;
-                    Cycles -= 2;
+                    
                 } break;
 
                 // STA
                 case INS_STA_ZP: { // None of the these affect flags
-                    WriteZeroPage( A, Cycles, memory );
+                    WriteZeroPage( A, memory );
                 } break;
                 case INS_STA_ZPX: {
-                    WriteZeroPageX( A, Cycles, memory );
+                    WriteZeroPageX( A, memory );
                 } break;
                 case INS_STA_ABS: {
-                    WriteAbsolute( A, Cycles, memory );
+                    WriteAbsolute( A, memory );
                 } break;
                 case INS_STA_ABX: {
-                    WriteAbsoluteX( A, Cycles, memory );
+                    WriteAbsoluteX( A, memory );
                 } break;
                 case INS_STA_ABY: {
-                    WriteAbsoluteY( A, Cycles, memory );
+                    WriteAbsoluteY( A, memory );
                 } break;
                 case INS_STA_IX: {
-                    WriteIndirectX( A, Cycles, memory );
+                    WriteIndirectX( A, memory );
                 } break;
                 case INS_STA_IY: {
-                    WriteIndirectY( A, Cycles, memory );
+                    WriteIndirectY( A, memory );
                 } break;
 
                 // STX - untested
                 case INS_STX_ZP: {
-                    WriteZeroPage( X, Cycles, memory );
+                    WriteZeroPage( X, memory );
                 } break;
                 case INS_STX_ZPY: {
-                    WriteZeroPageY( X, Cycles, memory );
+                    WriteZeroPageY( X, memory );
                 } break;
                 case INS_STX_ABS: {
-                    WriteAbsolute( X, Cycles, memory );
+                    WriteAbsolute( X, memory );
                 } break;
 
                 // STY - untested
                 case INS_STY_ZP: {
-                    WriteZeroPage( Y, Cycles, memory );
+                    WriteZeroPage( Y, memory );
                 } break;
                 case INS_STY_ZPX: {
-                    WriteZeroPageX( Y, Cycles, memory );
+                    WriteZeroPageX( Y, memory );
                 } break;
                 case INS_STY_ABS: {
-                    WriteAbsolute( Y, Cycles, memory );
+                    WriteAbsolute( Y, memory );
                 } break;
 
                 
                 // Implied instructions
                 case INS_PHA: {
                     Push( A, memory );
-                    Cycles -= 2;
+                    
                 } break;
                 case INS_PHP: {
                     Byte status = CombineFlags();
                     Push( status, memory );
-                    Cycles -= 2;
+                    
                 } break;
                 case INS_PLA: {
-                    A = Pull( memory );  
-                    Cycles -= 3;
+                    A = PullByte( memory );  
+                    
                     SetGenericStatus( A );
                 } break;
                 case INS_PLP: {
-                    SeparateFlags(Pull( memory ));   
-                    Cycles -= 3;
+                    SeparateFlags(PullByte( memory ));   
+                    
                 } break;
                 case INS_RTS: {
-                    PC = Pull( Cycles, memory );
-                    Cycles -= 3;
+                    PC = PullWord( memory );
+                    
                 } break;
 
                 // Jump
                 case INS_JMP_ABS: { // Untested
-                    PC = FetchWord( Cycles, memory );
+                    PC = FetchWord( memory );
                 } break;
                 case INS_JMP_IND: { // Untested
-                    Word IndirectAddr = FetchWord( Cycles, memory );
-                    PC = ReadWord( IndirectAddr, Cycles, memory );
+                    Word IndirectAddr = FetchWord( memory );
+                    PC = ReadWord( IndirectAddr, memory );
                 } break;
                 case INS_JSR: { // Review, not done.
-                    Word SubAddr = FetchWord( Cycles, memory );
-                    Push( PC, Cycles, memory );
+                    Word SubAddr = FetchWord( memory );
+                    Push( PC, memory );
                     PC = SubAddr;
-                    Cycles--;
+                    
                 } break;
 
                 default: {
