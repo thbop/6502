@@ -95,7 +95,7 @@ void W_Draw40( SDL_Renderer*& renderer, int x, int y, int color ) {
     W_DrawRect( renderer, rect, W_LR_PALETTE[color] );
 }
 
-void W_DrawASCII( SDL_Renderer*& renderer, int character, int x, int y ) {
+void W_DrawASCII( SDL_Renderer*& renderer, unsigned char character, int x, int y ) {
     SDL_Rect char_pix = {x*15 + x*3 + 3, y*21 + y*3 + 3, 3, 3};
     for (int j = 0; j < 7; j++) {
         for (int i = 0; i < 5; i++) {
@@ -110,15 +110,16 @@ void W_DrawASCII( SDL_Renderer*& renderer, int character, int x, int y ) {
 unsigned char W_TextBuffer[28][44];
 unsigned char W_TextPointer[2] = {0, 0};
 
-void W_PushText( char character ) {
-    if ( character != '\n' ) {
-        W_TextBuffer[W_TextPointer[1]][W_TextPointer[0]] = character;
-        if ( W_TextPointer[0] < 44 ) { W_TextPointer[0]++; }
-        else { W_TextPointer[0] = 0; W_TextPointer[1]++; }
-    }
-    else { W_TextPointer[0] = 0; W_TextPointer[1]++; }
+// void W_PushChar( char character ) {
+//     if ( character != '\n' ) {
+//         W_TextBuffer[W_TextPointer[1]][W_TextPointer[0]] = character;
+//         if ( W_TextPointer[0] < 44 ) { W_TextPointer[0]++; }
+//         else { W_TextPointer[0] = 0; W_TextPointer[1]++; }
+//     }
+//     else { W_TextPointer[0] = 0; W_TextPointer[1]++; }
     
-}
+// }
+
 
 void W_RenderTextBuffer( SDL_Renderer*& renderer ) {
     for (int j = 0; j < 28; j++) {

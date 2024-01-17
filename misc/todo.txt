@@ -2,6 +2,10 @@ Get OpenGL for SDL and make frag shader for CRT something screen; bloom
 
 Find out how BRK and Interrupt handlers work
 
+Store cursor position in memory so it can be accessed by program
+
+Change thbop.s -> stdio.s and .export functionality to other scripts
+
 Game ideas
     Tetris
     Minesweeper

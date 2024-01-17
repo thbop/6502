@@ -60,7 +60,7 @@ int main( int argc, char *argv[] ) {
                 //     }
                 // }
 
-                cpu.Execute( mem, true ); // Still a cycles issue
+                cpu.Execute( mem, false ); // Still a cycles issue
 
                 // Text rendering
                 W_RenderTextBuffer( renderer );

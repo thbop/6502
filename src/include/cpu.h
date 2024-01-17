@@ -273,6 +273,12 @@ struct CPU {
     }
     
 
+    void GraphicsMonitor( Mem& memory ) {
+        if ( memory[0xD013] ) {
+            W_TextBuffer[memory[0xD014]][memory[0xD013]] = memory[0xD012];
+        }
+    }
+
     // Addressing modes
     Byte LoadZeroPage( Mem& memory ) { // 2 cycles
         Byte ZeroPageAddr = FetchByte( memory );
@@ -283,37 +289,42 @@ struct CPU {
         return ReadByte( ZeroPageAddr, memory );
     }
 
-    void WriteZeroPage( Byte& From, Mem& memory ) { // 2 cycles
+    void WriteZeroPage( Byte& From, Mem& memory ) {
         Byte ZeroPageAddr = FetchByte( memory );
         memory[ZeroPageAddr] = From;
-        
+        GraphicsMonitor( memory );
+    }
+    void WriteZeroPage( Byte ZeroPageAddr, Byte Value, Mem& memory ) {
+        memory[ZeroPageAddr] = Value;
+        GraphicsMonitor( memory );
     }
     
     Byte LoadZeroPageX( Mem& memory ) { // 3 cycles
         Byte ZeroPageAddr = FetchByte( memory );
         ZeroPageAddr += X; // Wraps around the Zero Page
         
-
         return ReadByte( ZeroPageAddr, memory );
     }
     Byte LoadZeroPageX( Mem& memory, Byte& ZeroPageAddr ) { // 3 cycles
         ZeroPageAddr = FetchByte( memory );
         ZeroPageAddr += X; // Wraps around the Zero Page
         
-
         return ReadByte( ZeroPageAddr, memory );
     }
 
     void WriteZeroPageX( Byte& From, Mem& memory ) { // 3 cycles - untested
         Byte ZeroPageAddr = FetchByte( memory ) + X;
         memory[ZeroPageAddr] = From;
-        
+        GraphicsMonitor( memory );
+    }
+    void WriteZeroPageX( Byte ZeroPageAddr, Byte Value, Mem& memory ) {
+        memory[ZeroPageAddr + X] = Value;
+        GraphicsMonitor( memory );
     }
 
     Byte LoadZeroPageY( Mem& memory ) { // 3 cycles
         Byte ZeroPageAddr = FetchByte( memory );
         ZeroPageAddr += Y; // Wraps around the Zero Page
-        
 
         return ReadByte( ZeroPageAddr, memory );
     }
@@ -321,7 +332,11 @@ struct CPU {
     void WriteZeroPageY( Byte& From, Mem& memory ) { // 3 cycles - untested
         Byte ZeroPageAddr = FetchByte( memory ) + Y;
         memory[ZeroPageAddr] = From;
-        
+        GraphicsMonitor( memory );
+    }
+    void WriteZeroPageY( Byte ZeroPageAddr, Byte Value, Mem& memory ) {
+        memory[ZeroPageAddr + Y] = Value;
+        GraphicsMonitor( memory );
     }
 
     Byte LoadAbsolute( Mem& memory ) { // 3 cycles
@@ -336,19 +351,11 @@ struct CPU {
     void WriteAbsolute( Byte& From, Mem& memory ) { // 3 cycles
         Word AbsAddr = FetchWord( memory );
         memory[AbsAddr] = From;
-        
-
-
-        // Printer stuff; not very realistic but still funny
-        // if (AbsAddr == 0xFFF9) {
-        //     printer.Print(A);
-        // }
-
-        // Graphics monitoring
-        // Bad code structure, maybe: https://stackoverflow.com/questions/9568150/what-is-a-c-delegate (Option 3)
-        if ( memory[0xD013] ) {
-            W_PushText( memory[0xD012] );
-        }
+        GraphicsMonitor( memory );
+    }
+    void WriteAbsolute( Word AbsAddr, Byte Value, Mem& memory ) {
+        memory[AbsAddr] = Value;
+        GraphicsMonitor( memory );
     }
 
 
@@ -368,7 +375,11 @@ struct CPU {
     void WriteAbsoluteX( Byte& From, Mem& memory ) { // 4 cycles - untested
         Word AbsAddr = FetchWord( memory ) + X;
         memory[AbsAddr] = From;
-        
+        GraphicsMonitor( memory );
+    }
+    void WriteAbsoluteX( Word AbsAddr, Byte Value, Mem& memory ) {
+        memory[AbsAddr + X] = Value;
+        GraphicsMonitor( memory );
     }
 
     Byte LoadAbsoluteY( Mem& memory, bool PageCrossable=true ) { // 3-4 cycles
@@ -381,7 +392,11 @@ struct CPU {
     void WriteAbsoluteY( Byte& From, Mem& memory ) { // 4 cycles - untested
         Word AbsAddr = FetchWord( memory ) + Y;
         memory[AbsAddr] = From;
-        
+        GraphicsMonitor( memory );
+    }
+    void WriteAbsoluteY( Word AbsAddr, Byte Value, Mem& memory ) { // 4 cycles - untested
+        memory[AbsAddr + Y] = Value;
+        GraphicsMonitor( memory );
     }
 
     Byte LoadIndirectX( Mem& memory ) { // 5 cycles
@@ -398,7 +413,13 @@ struct CPU {
         Word TargetAddr = ReadWord( ZeroPageAddr, memory );
         memory[TargetAddr] = From;
 
+        GraphicsMonitor( memory );
+    }
+    void WriteIndirectX( Byte ZeroPageAddr, Byte Value, Mem& memory ) {
+        Word TargetAddr = ReadWord( (Byte)(ZeroPageAddr + X), memory );
+        memory[TargetAddr] = Value;
         
+        GraphicsMonitor( memory );
     }
 
     Byte LoadIndirectY( Mem& memory ) { // 4-5 cycles
@@ -415,8 +436,14 @@ struct CPU {
         Byte ZeroPageAddr = FetchWord( memory );
         Word TargetAddr = ReadWord( ZeroPageAddr, memory ) + Y;
         memory[TargetAddr] = From;
-
         
+        GraphicsMonitor( memory );
+    }
+    void WriteIndirectY( Byte ZeroPageAddr, Byte Value, Mem& memory ) { // 5 cycles - untested
+        Word TargetAddr = ReadWord( ZeroPageAddr, memory ) + Y;
+        memory[TargetAddr] = Value;
+        
+        GraphicsMonitor( memory );
     }
 
     // Stack operations
@@ -555,6 +582,15 @@ struct CPU {
         INS_STY_ZP = 0x84,
         INS_STY_ZPX = 0x94,
         INS_STY_ABS = 0x8C,
+
+        // Increments
+        INS_INC_ZP = 0xE6,
+        INS_INC_ZPX = 0xF6,
+        INS_INC_ABS = 0xEE,
+        INS_INC_ABX = 0xFE,
+
+        // Decrements
+        // ...
 
         // BIT
         INS_BIT_ZP = 0x24,
@@ -1020,6 +1056,35 @@ void Execute( Mem& memory, bool debug ) {
             case INS_STY_ABS: {
                 WriteAbsolute( Y, memory );
             } break;
+
+            // Increments
+            case INS_INC_ZP: {
+                Byte ZeroPageAddr;
+                Byte Value = LoadZeroPage( memory, ZeroPageAddr );
+                Value++;
+                WriteZeroPage( ZeroPageAddr, Value, memory );
+            } break;
+            case INS_INC_ZPX: { // Untested
+                Byte ZeroPageAddr;
+                Byte Value = LoadZeroPageX( memory, ZeroPageAddr );
+                Value++;
+                WriteZeroPage( ZeroPageAddr, Value, memory ); // X already got added to ZeroPageAddr during load
+            } break;
+            case INS_INC_ABS: {
+                Word AbsAddr;
+                Byte Value = LoadAbsolute( memory, AbsAddr );
+                Value++;
+                WriteAbsolute( AbsAddr, Value, memory );
+            } break;
+            case INS_INC_ABX: { // Untested
+                Word AbsAddr;
+                Byte Value = LoadAbsoluteX( memory, AbsAddr ); // X already got added to AbsAddr during load
+                Value++;
+                WriteAbsolute( AbsAddr, Value, memory );
+            } break;
+
+            // Decrements
+            // ...
             
             // Implied instructions
             case INS_PHA: {

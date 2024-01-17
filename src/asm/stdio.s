@@ -1,12 +1,15 @@
                                 ;
-IN               = $0200        ; Input buffer to 027F
-KBD              = $D010        ; Keyboard stuff
-KBDCR            = $D011
-DSP              = $D012        ; Display
-DSPCR            = $D013        ; Decides when a char is set.
+IN              = $0200         ; Input buffer to 027F
+KBD             = $D010         ; Keyboard stuff
+KBDCR           = $D011
+
+DSP             = $D012         ; Display
+DSPCR           = $D013         ; Decides when a char is set.
+cursor_ptr_x    = $D014
+cursor_ptr_y    = $D015
 
 
-HELLOWORLD:     LDA #'H'
+HELLOWORLD:     LDA #'H'        ; Crude way to ECHO "Hello World!"
                 JSR ECHO
                 LDA #'e'
                 JSR ECHO
@@ -34,7 +37,7 @@ HELLOWORLD:     LDA #'H'
                 RTS
                 
 
-RESET:          JSR HELLOWORLD
+RESET:          JSR HELLOWORLD  ; This needs to be changed greatly
                 LDA #01
                 JMP WAIT
 
@@ -50,7 +53,7 @@ WAIT:           AND KBDCR
 
 REGKEY:         LDA KBD         ; ECHO character
                 JSR ECHO
-                JMP WAIT
+                JMP WAIT        ; Later add this to input buffer (IN)
 
 .segment "VECTORS"
                 .WORD $0000     ; non-maskable interrupt handler
