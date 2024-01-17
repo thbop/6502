@@ -35,7 +35,7 @@ HELLOWORLD:     LDA #'H'
                 
 
 RESET:          JSR HELLOWORLD
-                LDA #$80
+                LDA #01
                 JMP WAIT
 
 ECHO:           STA DSP
@@ -44,8 +44,13 @@ ECHO:           STA DSP
                 STY DSPCR
                 RTS
 
-WAIT:           
-                BMI RESET
+WAIT:           AND KBDCR
+                BEQ WAIT        ; If 0, wait
+                JMP REGKEY
+
+REGKEY:         LDA KBD         ; ECHO character
+                JSR ECHO
+                JMP WAIT
 
 .segment "VECTORS"
                 .WORD $0000     ; non-maskable interrupt handler
