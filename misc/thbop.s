@@ -44,7 +44,8 @@ ECHO:           STA DSP
                 STY DSPCR
                 RTS
 
-WAIT:           BMI RESET
+WAIT:           
+                BMI RESET
 
 .segment "VECTORS"
                 .WORD $0000     ; non-maskable interrupt handler

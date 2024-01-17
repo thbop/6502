@@ -251,7 +251,6 @@ struct CPU {
     void CheckPageOverflow( Word Value, Byte Adder ) {
         Value &= 0x00FF;
         Value += Adder;
-        if (Value > 0xFF) {  }
     }
 
     Byte CombineFlags() {
@@ -573,551 +572,497 @@ struct CPU {
         INS_JMP_IND = 0x6C,
         INS_JSR = 0x20;
 
-    void Execute( Mem& memory, bool debug ) {
-            Byte Ins = FetchByte( memory );
-
-            // Debug
-            if (debug) {
-                printf("PC: %p | ", PC);
-                printf("Instruction: 0x%x | ", Ins);
-                printf("A: 0x%x |\n", A);
-            }
-            
-
-            switch( Ins ) {
-                // ADC
-                case INS_ADC_IM: {
-                    Byte Value = FetchByte( memory );
-                    ADC( Value );
-                } break;
-                case INS_ADC_ZP: {
-                    Byte Value = LoadZeroPage( memory );
-                    ADC( Value );
-                } break;
-                case INS_ADC_ZPX: {
-                    Byte Value = LoadZeroPageX( memory );
-                    ADC( Value );
-                } break;
-                case INS_ADC_ABS: {
-                    Byte Value = LoadAbsolute( memory );
-                    ADC( Value );
-                } break;
-                case INS_ADC_ABX: {
-                    Byte Value = LoadAbsoluteX( memory );
-                    ADC( Value );
-                } break;
-                case INS_ADC_ABY: {
-                    Byte Value = LoadAbsoluteY( memory );
-                    ADC( Value );
-                } break;
-                case INS_ADC_IX: {
-                    Byte Value = LoadIndirectX( memory );
-                    ADC( Value );
-                } break;
-                case INS_ADC_IY: {
-                    Byte Value = LoadIndirectY( memory );
-                    ADC( Value );
-                } break;
-
-                // AND
-                case INS_AND_IM: {
-                    Byte Value = FetchByte( memory );
-                    A &= Value;
-                    SetGenericStatus( A );
-                } break;
-                case INS_AND_ZP: {
-                    Byte Value = LoadZeroPage( memory );
-                    A &= Value;
-                    SetGenericStatus( A );
-                } break;
-                case INS_AND_ZPX: {
-                    Byte Value = LoadZeroPageX( memory );
-                    A &= Value;
-                    SetGenericStatus( A );
-                } break;
-                case INS_AND_ABS: {
-                    Byte Value = LoadAbsolute( memory );
-                    A &= Value;
-                    SetGenericStatus( A );
-                } break;
-                case INS_AND_ABX: {
-                    Byte Value = LoadAbsoluteX( memory );
-                    A &= Value;
-                    SetGenericStatus( A );
-                } break;
-                case INS_AND_ABY: {
-                    Byte Value = LoadAbsoluteY( memory );
-                    A &= Value;
-                    SetGenericStatus( A );
-                } break;
-                case INS_AND_IX: {
-                    Byte Value = LoadIndirectX( memory );
-                    A &= Value;
-                    SetGenericStatus( A );
-                } break;
-                case INS_AND_IY: {
-                    Byte Value = LoadIndirectY( memory );
-                    A &= Value;
-                    SetGenericStatus( A );
-                } break;
-
-                // ASL
-                case INS_ASL_ACC: {
-                    ASL( A );
-                } break;
-                case INS_ASL_ZP: {
-                    Byte ZeroPageAddr;
-                    Byte Value = LoadZeroPage( memory, ZeroPageAddr );
-                    ASL( Value );
-                    memory[ZeroPageAddr] = Value;
-                    
-                } break;
-                case INS_ASL_ZPX: {
-                    Byte ZeroPageAddr;
-                    Byte Value = LoadZeroPageX( memory, ZeroPageAddr );
-                    ASL( Value );
-                    memory[ZeroPageAddr] = Value;
-                    
-                } break;
-                case INS_ASL_ABS: {
-                    Word AbsAddr;
-                    Byte Value = LoadAbsolute( memory, AbsAddr );
-                    ASL( Value );
-                    memory[AbsAddr] = Value;
-                    
-                } break;
-                case INS_ASL_ABX: {
-                    Word AbsAddr;
-                    Byte Value = LoadAbsoluteX( memory, AbsAddr, false );
-                    ASL( Value );
-                    memory[AbsAddr] = Value;
-                    
-                } break;
-
-                // Branch
-                case INS_BCC: {
-                    SByte Offset = FetchSByte( memory, false );
-                    if ( !C ) {
-                        
-                        Word OldPC = PC;
-                        PC += Offset + 1;
-                        // Check if page is crossed
-                        if ( ( PC & 0xFF00 ) > ( OldPC & 0xFF00 ) ) {
-                            
-                        }
-                    }
-                    else { PC++; } // Increment PC if failure, otherwise it tries to parse argument as instruction
-                } break;
-                case INS_BCS: {
-                    SByte Offset = FetchSByte( memory, false );
-                    if ( C ) {
-                        
-                        Word OldPC = PC;
-                        PC += Offset + 1;
-                        // Check if page is crossed
-                        if ( ( PC & 0xFF00 ) > ( OldPC & 0xFF00 ) ) {
-                            
-                        }
-                    }
-                    else { PC++; }
-                } break;
-                case INS_BEQ: {
-                    SByte Offset = FetchSByte( memory, false );
-                    if ( Z ) {
-                        
-                        Word OldPC = PC;
-                        PC += Offset + 1;
-                        // Check if page is crossed
-                        if ( ( PC & 0xFF00 ) > ( OldPC & 0xFF00 ) ) {
-                            
-                        }
-                    }
-                    else { PC++; }
-                } break;
-                case INS_BMI: {
-                    SByte Offset = FetchSByte( memory, false );
-                    if ( N ) {
-                        
-                        Word OldPC = PC;
-                        PC += Offset + 1; // For some reason the +1 makes it work
-                        // Check if page is crossed
-                        if ( ( PC & 0xFF00 ) > ( OldPC & 0xFF00 ) ) {
-                            
-                        }
-                    }
-                    else { PC++; }
-                } break;
-                case INS_BNE: { // Untested
-                    SByte Offset = FetchSByte( memory, false );
-                    if ( !Z ) {
-                        
-                        Word OldPC = PC;
-                        PC += Offset + 1;
-                        // Check if page is crossed
-                        if ( ( PC & 0xFF00 ) > ( OldPC & 0xFF00 ) ) {
-                            
-                        }
-                    }
-                    else { PC++; }
-                } break;
-                case INS_BPL: { // Untested
-                    SByte Offset = FetchSByte( memory, false );
-                    if ( !N ) {
-                        
-                        Word OldPC = PC;
-                        PC += Offset + 1;
-                        // Check if page is crossed
-                        if ( ( PC & 0xFF00 ) > ( OldPC & 0xFF00 ) ) {
-                            
-                        }
-                    }
-                    else { PC++; }
-                } break;
-                case INS_BVC: { // Untested
-                    SByte Offset = FetchSByte( memory, false );
-                    if ( !V ) {
-                        
-                        Word OldPC = PC;
-                        PC += Offset + 1;
-                        // Check if page is crossed
-                        if ( ( PC & 0xFF00 ) > ( OldPC & 0xFF00 ) ) {
-                            
-                        }
-                    }
-                    else { PC++; }
-                } break;
-                case INS_BVS: { // Untested
-                    SByte Offset = FetchSByte( memory, false );
-                    if ( V ) {
-                        
-                        Word OldPC = PC;
-                        PC += Offset + 1;
-                        // Check if page is crossed
-                        if ( ( PC & 0xFF00 ) > ( OldPC & 0xFF00 ) ) {
-                            
-                        }
-                    }
-                    else { PC++; }
-                } break;
-
-
-                // BIT
-                case INS_BIT_ZP: {
-                    Byte Value = LoadZeroPage( memory );
-                    BITSsetStatus( Value );
-                } break;
-                case INS_BIT_ABS: {
-                    Byte Value = LoadAbsolute( memory );
-                    BITSsetStatus( Value );
-                } break;
-
-                // LDA
-                case INS_LDA_IM: {
-                    A = FetchByte( memory );
-                    SetGenericStatus( A );
-                } break;
-                case INS_LDA_ZP: {
-                    A = LoadZeroPage( memory );
-                    SetGenericStatus( A );
-                } break;
-                case INS_LDA_ZPX: {
-                    A = LoadZeroPageX( memory );
-                    SetGenericStatus( A );
-                } break;
-                case INS_LDA_ABS: {
-                    A = LoadAbsolute( memory );
-                    SetGenericStatus( A );
-                } break;
-                case INS_LDA_ABX: {
-                    A = LoadAbsoluteX( memory );
-                    SetGenericStatus( A );
-                } break;
-                case INS_LDA_ABY: {
-                    A = LoadAbsoluteY( memory );
-                    SetGenericStatus( A );
-                } break;
-                case INS_LDA_IX: {
-                    A = LoadIndirectX( memory );
-                    SetGenericStatus( A );
-                } break;
-                case INS_LDA_IY: {
-                    A = LoadIndirectY( memory );
-                    SetGenericStatus( A );
-                } break;
-
-                // LDX
-                case INS_LDX_IM: {
-                    X = FetchByte( memory );
-                    SetGenericStatus( X );
-                } break;
-                case INS_LDX_ZP: {
-                    X = LoadZeroPage( memory );
-                    SetGenericStatus( X );
-                } break;
-                case INS_LDX_ZPY: {
-                    X = LoadZeroPageY( memory );
-                    SetGenericStatus( X );
-                } break;
-                case INS_LDX_ABS: {
-                    X = LoadAbsolute( memory );
-                    SetGenericStatus( X );
-                } break;
-                case INS_LDX_ABY: {
-                    X = LoadAbsoluteY( memory, false );
-                    SetGenericStatus( X );
-                } break;
-
-                // LDY
-                case INS_LDY_IM: {
-                    Y = FetchByte( memory );
-                    SetGenericStatus( Y );
-                } break;
-                case INS_LDY_ZP: {
-                    Y = LoadZeroPage( memory );
-                    SetGenericStatus( Y );
-                } break;
-                case INS_LDY_ZPX: {
-                    Y = LoadZeroPageX( memory );
-                    SetGenericStatus( Y );
-                } break;
-                case INS_LDY_ABS: {
-                    Y = LoadAbsolute( memory );
-                    SetGenericStatus( Y );
-                } break;
-                case INS_LDY_ABX: {
-                    Y = LoadAbsoluteX( memory );
-                    SetGenericStatus( Y );
-                } break;
-
-                // LSR
-                case INS_LSR_ACC: {
-                    LSR( A ); // LSR handles SetStatus
-                } break;
-                case INS_LSR_ZP: {
-                    Byte ZeroPageAddr;
-                    Byte Value = LoadZeroPage( memory, ZeroPageAddr );
-                    LSR( Value );
-                    memory[ZeroPageAddr] = Value;
-                    
-                } break;
-                case INS_LSR_ZPX: {
-                    Byte ZeroPageAddr;
-                    Byte Value = LoadZeroPageX( memory, ZeroPageAddr );
-                    LSR( Value );
-                    memory[ZeroPageAddr] = Value;
-                    
-                } break;
-                case INS_LSR_ABS: {
-                    Word AbsAddr;
-                    Byte Value = LoadAbsolute( memory, AbsAddr );
-                    LSR( Value );
-                    memory[AbsAddr] = Value;
-                    
-                } break;
-                case INS_LSR_ABX: {
-                    Word AbsAddr;
-                    Byte Value = LoadAbsoluteX( memory, AbsAddr, false );
-                    LSR( Value );
-                    memory[AbsAddr] = Value;
-                    
-                } break;
-
-                // NOP
-                case INS_NOP: {
-                    
-                } break;
-
-                // ORA
-                case INS_ORA_IM: {
-                    A |= FetchByte( memory );
-                    SetGenericStatus( A );
-                } break;
-                case INS_ORA_ZP: {
-                    A |= LoadZeroPage( memory );
-                    SetGenericStatus( A );
-                } break;
-                case INS_ORA_ZPX: {
-                    A |= LoadZeroPageX( memory );
-                    SetGenericStatus( A );
-                } break;
-                case INS_ORA_ABS: {
-                    A |= LoadAbsolute( memory );
-                    SetGenericStatus( A );
-                } break;
-                case INS_ORA_ABX: {
-                    A |= LoadAbsoluteX( memory );
-                    SetGenericStatus( A );
-                } break;
-                case INS_ORA_ABY: {
-                    A |= LoadAbsoluteY( memory );
-                    SetGenericStatus( A );
-                } break;
-                case INS_ORA_IX: {
-                    A |= LoadIndirectX( memory );
-                    SetGenericStatus( A );
-                } break;
-                case INS_ORA_IY: {
-                    A |= LoadIndirectY( memory );
-                    SetGenericStatus( A );
-                } break;
-
-                // ROL
-                case INS_ROL_ACC: {
-                    ROL( A );
-                } break;
-                case INS_ROL_ZP: {
-                    Byte ZeroPageAddr;
-                    Byte Value = LoadZeroPage( memory, ZeroPageAddr );
-                    ROL( Value );
-                    memory[ZeroPageAddr] = Value;
-                    
-                } break;
-                case INS_ROL_ZPX: {
-                    Byte ZeroPageAddr;
-                    Byte Value = LoadZeroPageX( memory, ZeroPageAddr );
-                    ROL( Value );
-                    memory[ZeroPageAddr] = Value;
-                    
-                } break;
-                case INS_ROL_ABS: {
-                    Word AbsAddr;
-                    Byte Value = LoadAbsolute( memory, AbsAddr );
-                    ROL( Value );
-                    memory[AbsAddr] = Value;
-                    
-                } break;
-                case INS_ROL_ABX: {
-                    Word AbsAddr;
-                    Byte Value = LoadAbsoluteX( memory, AbsAddr, false );
-                    ROL( Value );
-                    memory[AbsAddr] = Value;
-                    
-                } break;
-
-                // ROR - untested but very similar to ROL
-                case INS_ROR_ACC: {
-                    ROR( A );
-                } break;
-                case INS_ROR_ZP: {
-                    Byte ZeroPageAddr;
-                    Byte Value = LoadZeroPage( memory, ZeroPageAddr );
-                    ROR( Value );
-                    memory[ZeroPageAddr] = Value;
-                    
-                } break;
-                case INS_ROR_ZPX: {
-                    Byte ZeroPageAddr;
-                    Byte Value = LoadZeroPageX( memory, ZeroPageAddr );
-                    ROR( Value );
-                    memory[ZeroPageAddr] = Value;
-                    
-                } break;
-                case INS_ROR_ABS: {
-                    Word AbsAddr;
-                    Byte Value = LoadAbsolute( memory, AbsAddr );
-                    ROR( Value );
-                    memory[AbsAddr] = Value;
-                    
-                } break;
-                case INS_ROR_ABX: {
-                    Word AbsAddr;
-                    Byte Value = LoadAbsoluteX( memory, AbsAddr, false );
-                    ROR( Value );
-                    memory[AbsAddr] = Value;
-                    
-                } break;
-
-                // STA
-                case INS_STA_ZP: { // None of the these affect flags
-                    WriteZeroPage( A, memory );
-                } break;
-                case INS_STA_ZPX: {
-                    WriteZeroPageX( A, memory );
-                } break;
-                case INS_STA_ABS: {
-                    WriteAbsolute( A, memory );
-                } break;
-                case INS_STA_ABX: {
-                    WriteAbsoluteX( A, memory );
-                } break;
-                case INS_STA_ABY: {
-                    WriteAbsoluteY( A, memory );
-                } break;
-                case INS_STA_IX: {
-                    WriteIndirectX( A, memory );
-                } break;
-                case INS_STA_IY: {
-                    WriteIndirectY( A, memory );
-                } break;
-
-                // STX - untested
-                case INS_STX_ZP: {
-                    WriteZeroPage( X, memory );
-                } break;
-                case INS_STX_ZPY: {
-                    WriteZeroPageY( X, memory );
-                } break;
-                case INS_STX_ABS: {
-                    WriteAbsolute( X, memory );
-                } break;
-
-                // STY - untested
-                case INS_STY_ZP: {
-                    WriteZeroPage( Y, memory );
-                } break;
-                case INS_STY_ZPX: {
-                    WriteZeroPageX( Y, memory );
-                } break;
-                case INS_STY_ABS: {
-                    WriteAbsolute( Y, memory );
-                } break;
-
-                
-                // Implied instructions
-                case INS_PHA: {
-                    Push( A, memory );
-                    
-                } break;
-                case INS_PHP: {
-                    Byte status = CombineFlags();
-                    Push( status, memory );
-                    
-                } break;
-                case INS_PLA: {
-                    A = PullByte( memory );  
-                    
-                    SetGenericStatus( A );
-                } break;
-                case INS_PLP: {
-                    SeparateFlags(PullByte( memory ));   
-                    
-                } break;
-                case INS_RTS: {
-                    PC = PullWord( memory );
-                    
-                } break;
-
-                // Jump
-                case INS_JMP_ABS: { // Untested
-                    PC = FetchWord( memory );
-                } break;
-                case INS_JMP_IND: { // Untested
-                    Word IndirectAddr = FetchWord( memory );
-                    PC = ReadWord( IndirectAddr, memory );
-                } break;
-                case INS_JSR: { // Review, not done.
-                    Word SubAddr = FetchWord( memory );
-                    Push( PC, memory );
-                    PC = SubAddr;
-                    
-                } break;
-
-                default: {
-                    if ( debug ) { printf("Instruction not handled 0x%x\n", Ins); }
-                } break;
-            }
+void Execute( Mem& memory, bool debug ) {
+        Byte Ins = FetchByte( memory );
+        // Debug
+        if (debug) {
+            printf("PC: %p | ", PC);
+            printf("Instruction: 0x%x | ", Ins);
+            printf("A: 0x%x |\n", A);
         }
-    // }
+        
+        switch( Ins ) {
+            // ADC
+            case INS_ADC_IM: {
+                Byte Value = FetchByte( memory );
+                ADC( Value );
+            } break;
+            case INS_ADC_ZP: {
+                Byte Value = LoadZeroPage( memory );
+                ADC( Value );
+            } break;
+            case INS_ADC_ZPX: {
+                Byte Value = LoadZeroPageX( memory );
+                ADC( Value );
+            } break;
+            case INS_ADC_ABS: {
+                Byte Value = LoadAbsolute( memory );
+                ADC( Value );
+            } break;
+            case INS_ADC_ABX: {
+                Byte Value = LoadAbsoluteX( memory );
+                ADC( Value );
+            } break;
+            case INS_ADC_ABY: {
+                Byte Value = LoadAbsoluteY( memory );
+                ADC( Value );
+            } break;
+            case INS_ADC_IX: {
+                Byte Value = LoadIndirectX( memory );
+                ADC( Value );
+            } break;
+            case INS_ADC_IY: {
+                Byte Value = LoadIndirectY( memory );
+                ADC( Value );
+            } break;
+            // AND
+            case INS_AND_IM: {
+                Byte Value = FetchByte( memory );
+                A &= Value;
+                SetGenericStatus( A );
+            } break;
+            case INS_AND_ZP: {
+                Byte Value = LoadZeroPage( memory );
+                A &= Value;
+                SetGenericStatus( A );
+            } break;
+            case INS_AND_ZPX: {
+                Byte Value = LoadZeroPageX( memory );
+                A &= Value;
+                SetGenericStatus( A );
+            } break;
+            case INS_AND_ABS: {
+                Byte Value = LoadAbsolute( memory );
+                A &= Value;
+                SetGenericStatus( A );
+            } break;
+            case INS_AND_ABX: {
+                Byte Value = LoadAbsoluteX( memory );
+                A &= Value;
+                SetGenericStatus( A );
+            } break;
+            case INS_AND_ABY: {
+                Byte Value = LoadAbsoluteY( memory );
+                A &= Value;
+                SetGenericStatus( A );
+            } break;
+            case INS_AND_IX: {
+                Byte Value = LoadIndirectX( memory );
+                A &= Value;
+                SetGenericStatus( A );
+            } break;
+            case INS_AND_IY: {
+                Byte Value = LoadIndirectY( memory );
+                A &= Value;
+                SetGenericStatus( A );
+            } break;
+            // ASL
+            case INS_ASL_ACC: {
+                ASL( A );
+            } break;
+            case INS_ASL_ZP: {
+                Byte ZeroPageAddr;
+                Byte Value = LoadZeroPage( memory, ZeroPageAddr );
+                ASL( Value );
+                memory[ZeroPageAddr] = Value;
+                
+            } break;
+            case INS_ASL_ZPX: {
+                Byte ZeroPageAddr;
+                Byte Value = LoadZeroPageX( memory, ZeroPageAddr );
+                ASL( Value );
+                memory[ZeroPageAddr] = Value;
+                
+            } break;
+            case INS_ASL_ABS: {
+                Word AbsAddr;
+                Byte Value = LoadAbsolute( memory, AbsAddr );
+                ASL( Value );
+                memory[AbsAddr] = Value;
+                
+            } break;
+            case INS_ASL_ABX: {
+                Word AbsAddr;
+                Byte Value = LoadAbsoluteX( memory, AbsAddr, false );
+                ASL( Value );
+                memory[AbsAddr] = Value;
+                
+            } break;
+            // Branch
+            case INS_BCC: {
+                SByte Offset = FetchSByte( memory, false );
+                if ( !C ) {
+                    
+                    Word OldPC = PC;
+                    PC += Offset + 1;
+                }
+                else { PC++; } // Increment PC if failure, otherwise it tries to parse argument as instruction
+            } break;
+            case INS_BCS: {
+                SByte Offset = FetchSByte( memory, false );
+                if ( C ) {
+                    
+                    Word OldPC = PC;
+                    PC += Offset + 1;
+                }
+                else { PC++; }
+            } break;
+            case INS_BEQ: {
+                SByte Offset = FetchSByte( memory, false );
+                if ( Z ) {
+                    
+                    Word OldPC = PC;
+                    PC += Offset + 1;
+                }
+                else { PC++; }
+            } break;
+            case INS_BMI: {
+                SByte Offset = FetchSByte( memory, false );
+                if ( N ) {
+                    
+                    Word OldPC = PC;
+                    PC += Offset + 1; // For some reason the +1 makes it work
+                }
+                else { PC++; }
+            } break;
+            case INS_BNE: { // Untested
+                SByte Offset = FetchSByte( memory, false );
+                if ( !Z ) {
+                    
+                    Word OldPC = PC;
+                    PC += Offset + 1;
+                }
+                else { PC++; }
+            } break;
+            case INS_BPL: { // Untested
+                SByte Offset = FetchSByte( memory, false );
+                if ( !N ) {
+                    
+                    Word OldPC = PC;
+                    PC += Offset + 1;
+                }
+                else { PC++; }
+            } break;
+            case INS_BVC: { // Untested
+                SByte Offset = FetchSByte( memory, false );
+                if ( !V ) {
+                    
+                    Word OldPC = PC;
+                    PC += Offset + 1;
+                }
+                else { PC++; }
+            } break;
+            case INS_BVS: { // Untested
+                SByte Offset = FetchSByte( memory, false );
+                if ( V ) {
+                    
+                    Word OldPC = PC;
+                    PC += Offset + 1;
+                }
+                else { PC++; }
+            } break;
+            // BIT
+            case INS_BIT_ZP: {
+                Byte Value = LoadZeroPage( memory );
+                BITSsetStatus( Value );
+            } break;
+            case INS_BIT_ABS: {
+                Byte Value = LoadAbsolute( memory );
+                BITSsetStatus( Value );
+            } break;
+            // LDA
+            case INS_LDA_IM: {
+                A = FetchByte( memory );
+                SetGenericStatus( A );
+            } break;
+            case INS_LDA_ZP: {
+                A = LoadZeroPage( memory );
+                SetGenericStatus( A );
+            } break;
+            case INS_LDA_ZPX: {
+                A = LoadZeroPageX( memory );
+                SetGenericStatus( A );
+            } break;
+            case INS_LDA_ABS: {
+                A = LoadAbsolute( memory );
+                SetGenericStatus( A );
+            } break;
+            case INS_LDA_ABX: {
+                A = LoadAbsoluteX( memory );
+                SetGenericStatus( A );
+            } break;
+            case INS_LDA_ABY: {
+                A = LoadAbsoluteY( memory );
+                SetGenericStatus( A );
+            } break;
+            case INS_LDA_IX: {
+                A = LoadIndirectX( memory );
+                SetGenericStatus( A );
+            } break;
+            case INS_LDA_IY: {
+                A = LoadIndirectY( memory );
+                SetGenericStatus( A );
+            } break;
+            // LDX
+            case INS_LDX_IM: {
+                X = FetchByte( memory );
+                SetGenericStatus( X );
+            } break;
+            case INS_LDX_ZP: {
+                X = LoadZeroPage( memory );
+                SetGenericStatus( X );
+            } break;
+            case INS_LDX_ZPY: {
+                X = LoadZeroPageY( memory );
+                SetGenericStatus( X );
+            } break;
+            case INS_LDX_ABS: {
+                X = LoadAbsolute( memory );
+                SetGenericStatus( X );
+            } break;
+            case INS_LDX_ABY: {
+                X = LoadAbsoluteY( memory, false );
+                SetGenericStatus( X );
+            } break;
+            // LDY
+            case INS_LDY_IM: {
+                Y = FetchByte( memory );
+                SetGenericStatus( Y );
+            } break;
+            case INS_LDY_ZP: {
+                Y = LoadZeroPage( memory );
+                SetGenericStatus( Y );
+            } break;
+            case INS_LDY_ZPX: {
+                Y = LoadZeroPageX( memory );
+                SetGenericStatus( Y );
+            } break;
+            case INS_LDY_ABS: {
+                Y = LoadAbsolute( memory );
+                SetGenericStatus( Y );
+            } break;
+            case INS_LDY_ABX: {
+                Y = LoadAbsoluteX( memory );
+                SetGenericStatus( Y );
+            } break;
+            // LSR
+            case INS_LSR_ACC: {
+                LSR( A ); // LSR handles SetStatus
+            } break;
+            case INS_LSR_ZP: {
+                Byte ZeroPageAddr;
+                Byte Value = LoadZeroPage( memory, ZeroPageAddr );
+                LSR( Value );
+                memory[ZeroPageAddr] = Value;
+                
+            } break;
+            case INS_LSR_ZPX: {
+                Byte ZeroPageAddr;
+                Byte Value = LoadZeroPageX( memory, ZeroPageAddr );
+                LSR( Value );
+                memory[ZeroPageAddr] = Value;
+                
+            } break;
+            case INS_LSR_ABS: {
+                Word AbsAddr;
+                Byte Value = LoadAbsolute( memory, AbsAddr );
+                LSR( Value );
+                memory[AbsAddr] = Value;
+                
+            } break;
+            case INS_LSR_ABX: {
+                Word AbsAddr;
+                Byte Value = LoadAbsoluteX( memory, AbsAddr, false );
+                LSR( Value );
+                memory[AbsAddr] = Value;
+                
+            } break;
+            // NOP
+            case INS_NOP: {
+                
+            } break;
+            // ORA
+            case INS_ORA_IM: {
+                A |= FetchByte( memory );
+                SetGenericStatus( A );
+            } break;
+            case INS_ORA_ZP: {
+                A |= LoadZeroPage( memory );
+                SetGenericStatus( A );
+            } break;
+            case INS_ORA_ZPX: {
+                A |= LoadZeroPageX( memory );
+                SetGenericStatus( A );
+            } break;
+            case INS_ORA_ABS: {
+                A |= LoadAbsolute( memory );
+                SetGenericStatus( A );
+            } break;
+            case INS_ORA_ABX: {
+                A |= LoadAbsoluteX( memory );
+                SetGenericStatus( A );
+            } break;
+            case INS_ORA_ABY: {
+                A |= LoadAbsoluteY( memory );
+                SetGenericStatus( A );
+            } break;
+            case INS_ORA_IX: {
+                A |= LoadIndirectX( memory );
+                SetGenericStatus( A );
+            } break;
+            case INS_ORA_IY: {
+                A |= LoadIndirectY( memory );
+                SetGenericStatus( A );
+            } break;
+            // ROL
+            case INS_ROL_ACC: {
+                ROL( A );
+            } break;
+            case INS_ROL_ZP: {
+                Byte ZeroPageAddr;
+                Byte Value = LoadZeroPage( memory, ZeroPageAddr );
+                ROL( Value );
+                memory[ZeroPageAddr] = Value;
+                
+            } break;
+            case INS_ROL_ZPX: {
+                Byte ZeroPageAddr;
+                Byte Value = LoadZeroPageX( memory, ZeroPageAddr );
+                ROL( Value );
+                memory[ZeroPageAddr] = Value;
+                
+            } break;
+            case INS_ROL_ABS: {
+                Word AbsAddr;
+                Byte Value = LoadAbsolute( memory, AbsAddr );
+                ROL( Value );
+                memory[AbsAddr] = Value;
+                
+            } break;
+            case INS_ROL_ABX: {
+                Word AbsAddr;
+                Byte Value = LoadAbsoluteX( memory, AbsAddr, false );
+                ROL( Value );
+                memory[AbsAddr] = Value;
+                
+            } break;
+            // ROR - untested but very similar to ROL
+            case INS_ROR_ACC: {
+                ROR( A );
+            } break;
+            case INS_ROR_ZP: {
+                Byte ZeroPageAddr;
+                Byte Value = LoadZeroPage( memory, ZeroPageAddr );
+                ROR( Value );
+                memory[ZeroPageAddr] = Value;
+                
+            } break;
+            case INS_ROR_ZPX: {
+                Byte ZeroPageAddr;
+                Byte Value = LoadZeroPageX( memory, ZeroPageAddr );
+                ROR( Value );
+                memory[ZeroPageAddr] = Value;
+                
+            } break;
+            case INS_ROR_ABS: {
+                Word AbsAddr;
+                Byte Value = LoadAbsolute( memory, AbsAddr );
+                ROR( Value );
+                memory[AbsAddr] = Value;
+                
+            } break;
+            case INS_ROR_ABX: {
+                Word AbsAddr;
+                Byte Value = LoadAbsoluteX( memory, AbsAddr, false );
+                ROR( Value );
+                memory[AbsAddr] = Value;
+                
+            } break;
+            // STA
+            case INS_STA_ZP: { // None of the these affect flags
+                WriteZeroPage( A, memory );
+            } break;
+            case INS_STA_ZPX: {
+                WriteZeroPageX( A, memory );
+            } break;
+            case INS_STA_ABS: {
+                WriteAbsolute( A, memory );
+            } break;
+            case INS_STA_ABX: {
+                WriteAbsoluteX( A, memory );
+            } break;
+            case INS_STA_ABY: {
+                WriteAbsoluteY( A, memory );
+            } break;
+            case INS_STA_IX: {
+                WriteIndirectX( A, memory );
+            } break;
+            case INS_STA_IY: {
+                WriteIndirectY( A, memory );
+            } break;
+            // STX - untested
+            case INS_STX_ZP: {
+                WriteZeroPage( X, memory );
+            } break;
+            case INS_STX_ZPY: {
+                WriteZeroPageY( X, memory );
+            } break;
+            case INS_STX_ABS: {
+                WriteAbsolute( X, memory );
+            } break;
+            // STY - untested
+            case INS_STY_ZP: {
+                WriteZeroPage( Y, memory );
+            } break;
+            case INS_STY_ZPX: {
+                WriteZeroPageX( Y, memory );
+            } break;
+            case INS_STY_ABS: {
+                WriteAbsolute( Y, memory );
+            } break;
+            
+            // Implied instructions
+            case INS_PHA: {
+                Push( A, memory );
+                
+            } break;
+            case INS_PHP: {
+                Byte status = CombineFlags();
+                Push( status, memory );
+                
+            } break;
+            case INS_PLA: {
+                A = PullByte( memory );  
+                
+                SetGenericStatus( A );
+            } break;
+            case INS_PLP: {
+                SeparateFlags(PullByte( memory ));   
+                
+            } break;
+            case INS_RTS: {
+                PC = PullWord( memory );
+                
+            } break;
+            // Jump
+            case INS_JMP_ABS: { // Untested
+                PC = FetchWord( memory );
+            } break;
+            case INS_JMP_IND: { // Untested
+                Word IndirectAddr = FetchWord( memory );
+                PC = ReadWord( IndirectAddr, memory );
+            } break;
+            case INS_JSR: { // Review, not done.
+                Word SubAddr = FetchWord( memory );
+                Push( PC, memory );
+                PC = SubAddr;
+                
+            } break;
+            default: {
+                if ( debug ) { printf("Instruction not handled 0x%x\n", Ins); }
+            } break;
+        }
+    }
     void printRegFlags() {
         printf("A = 0x%x\n", A);
         printf("X = 0x%x\n", X);
