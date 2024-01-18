@@ -75,6 +75,16 @@ SDL_Renderer* W_CreateRenderer( SDL_Window*& window ) {
     return renderer;
 }
 
+char W_ProcessKey( SDL_Keysym& keysym ) {
+    char character = keysym.sym;
+    if ( keysym.mod == 4097 ) {
+        character -= 32;
+    } else if (keysym.sym > 127) {
+        character = 0;
+    }
+    return character;
+}
+
 void W_ClearScreen( SDL_Renderer*& renderer, int (&color)[4] ) {
     SDL_SetRenderDrawColor( renderer, color[0], color[1], color[2], color[3] );
     SDL_RenderClear( renderer );

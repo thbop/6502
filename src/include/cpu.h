@@ -275,7 +275,7 @@ struct CPU {
 
     void GraphicsMonitor( Mem& memory ) {
         if ( memory[0xD013] ) {
-            W_TextBuffer[memory[0xD014]][memory[0xD013]] = memory[0xD012];
+            W_TextBuffer[memory[0xD015]][memory[0xD014]] = memory[0xD012];
         }
     }
 
@@ -614,7 +614,8 @@ void Execute( Mem& memory, bool debug ) {
         if (debug) {
             printf("PC: %p | ", PC);
             printf("Instruction: 0x%x | ", Ins);
-            printf("A: 0x%x |\n", A);
+            printf("A: 0x%x | ", A);
+            printf("RA: 0x%x |\n", memory[0xD011]);
         }
         
         switch( Ins ) {
@@ -1063,24 +1064,28 @@ void Execute( Mem& memory, bool debug ) {
                 Byte Value = LoadZeroPage( memory, ZeroPageAddr );
                 Value++;
                 WriteZeroPage( ZeroPageAddr, Value, memory );
+                SetGenericStatus( Value );
             } break;
             case INS_INC_ZPX: { // Untested
                 Byte ZeroPageAddr;
                 Byte Value = LoadZeroPageX( memory, ZeroPageAddr );
                 Value++;
                 WriteZeroPage( ZeroPageAddr, Value, memory ); // X already got added to ZeroPageAddr during load
+                SetGenericStatus( Value );
             } break;
             case INS_INC_ABS: {
                 Word AbsAddr;
                 Byte Value = LoadAbsolute( memory, AbsAddr );
                 Value++;
                 WriteAbsolute( AbsAddr, Value, memory );
+                SetGenericStatus( Value );
             } break;
             case INS_INC_ABX: { // Untested
                 Word AbsAddr;
                 Byte Value = LoadAbsoluteX( memory, AbsAddr ); // X already got added to AbsAddr during load
                 Value++;
                 WriteAbsolute( AbsAddr, Value, memory );
+                SetGenericStatus( Value );
             } break;
 
             // Decrements

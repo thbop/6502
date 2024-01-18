@@ -37,18 +37,32 @@ int main( int argc, char *argv[] ) {
     SDL_Window* window = NULL;
     SDL_Renderer* renderer = NULL;
 
+
     if ( W_Init() ) {
         // Create window
         window = W_CreateWindow("6502", WIDTH, HEIGHT);
         if ( window != NULL ) {
             renderer = W_CreateRenderer( window );
-                SDL_Event windowEvent;
+            SDL_Event event;
             bool running = true;
 
             while ( running ) {
-                if ( SDL_PollEvent( &windowEvent ) ) {
-                    if ( SDL_QUIT == windowEvent.type ) { running = false; }
+                // Check events
+                while ( SDL_PollEvent( &event ) ) {
+                    switch( event.type ) {
+                        case SDL_QUIT:
+                            running = false;
+                            break;
+                        case SDL_KEYUP:
+                            mem[0xD010] = W_ProcessKey( event.key.keysym );
+                            mem[0xD011] = 1; // KBDCR
+                            break;
+                        default:
+                            break;
+                        
+                    }
                 }
+
                 // Clear screen
                 W_ClearScreen(renderer, W_LR_PALETTE[0]);
 
@@ -61,12 +75,14 @@ int main( int argc, char *argv[] ) {
                 // }
 
                 cpu.Execute( mem, false ); // Still a cycles issue
+                mem[0xD011] = 0;
 
                 // Text rendering
                 W_RenderTextBuffer( renderer );
 
                 // Update screen
                 SDL_RenderPresent( renderer );
+                
             }
         }
     }
