@@ -78,14 +78,15 @@ int main( int argc, char *argv[] ) {
                 //     }
                 // }
                 
-                cpu.Execute( mem, true );
+                cpu.Execute( mem, false );
                 
+                if (mem[0xD013]) {
+                    // Text rendering
+                    W_RenderTextBuffer( renderer );
 
-                // Text rendering
-                W_RenderTextBuffer( renderer );
-
-                // Update screen
-                SDL_RenderPresent( renderer );
+                    // Update screen
+                    SDL_RenderPresent( renderer );
+                }
             }
         }
     }
