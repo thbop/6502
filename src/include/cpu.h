@@ -201,7 +201,7 @@ struct CPU {
 
     void CompareSetStatus( Byte Reg, Byte Value ) {
         C = ( Reg >= Value );
-        Z = ( Reg = Value );
+        Z = ( Reg == Value );
         N = (Value & 0b10000000) > 0; 
     }
 
@@ -616,7 +616,10 @@ struct CPU {
         INS_INC_ABX = 0xFE,
 
         // Decrements
-        // ...
+        INS_DEC_ZP = 0xC6,
+        INS_DEC_ZPX = 0xD6,
+        INS_DEC_ABS = 0xCE,
+        INS_DEC_ABX = 0xDE,
 
         // BIT
         INS_BIT_ZP = 0x24,
@@ -641,6 +644,15 @@ void Execute( Mem& memory, bool debug ) {
             printf("PC: %p | ", PC);
             printf("Instruction: 0x%x | ", Ins);
             printf("A: 0x%x | ", A);
+            printf("X: 0x%x | ", X);
+            printf("Y: 0x%x | ", Y);
+            printf("C: 0x%x | ", C);
+            printf("Z: 0x%x | ", Z);
+            // printf("I: 0x%x | ", I);
+            // printf("D: 0x%x | ", D);
+            // printf("B: 0x%x | ", B);
+            // printf("V: 0x%x | ", V);
+            printf("N: 0x%x | ", N);
             printf("RA: 0x%x |\n", memory[0xD011]);
         }
         
@@ -1178,7 +1190,34 @@ void Execute( Mem& memory, bool debug ) {
             } break;
 
             // Decrements
-            // ...
+            case INS_DEC_ZP: {
+                Byte ZeroPageAddr;
+                Byte Value = LoadZeroPage( memory, ZeroPageAddr );
+                Value--;
+                WriteZeroPage( ZeroPageAddr, Value, memory );
+                SetGenericStatus( Value );
+            } break;
+            case INS_DEC_ZPX: { // Untested
+                Byte ZeroPageAddr;
+                Byte Value = LoadZeroPageX( memory, ZeroPageAddr );
+                Value--;
+                WriteZeroPage( ZeroPageAddr, Value, memory ); // X already got added to ZeroPageAddr during load
+                SetGenericStatus( Value );
+            } break;
+            case INS_DEC_ABS: {
+                Word AbsAddr;
+                Byte Value = LoadAbsolute( memory, AbsAddr );
+                Value--;
+                WriteAbsolute( AbsAddr, Value, memory );
+                SetGenericStatus( Value );
+            } break;
+            case INS_DEC_ABX: { // Untested
+                Word AbsAddr;
+                Byte Value = LoadAbsoluteX( memory, AbsAddr ); // X already got added to AbsAddr during load
+                Value--;
+                WriteAbsolute( AbsAddr, Value, memory );
+                SetGenericStatus( Value );
+            } break;
             
             // Implied instructions
             case INS_PHA: {

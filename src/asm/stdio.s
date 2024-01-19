@@ -14,11 +14,26 @@ RESET:
     RTS
 ECHO:
     STA DSP
-    LDA #01
-    STA DSPCR ; My odd way to detect a character change
-    STY DSPCR
+    LDA #08
+    CMP DSP
+    BEQ BACKSPACE
+    JSR CHARCHANGE
     INC cursor_ptr_x ; Move the cursor
     RTS
+
+BACKSPACE:
+    JSR CHARCHANGE
+    DEC cursor_ptr_x
+    RTS
+
+CHARCHANGE: ; My odd way to detect a character change
+    LDA #01
+    LDY #00
+    STA DSPCR
+    STY DSPCR
+    RTS
+
+; ECHOXY
 
 WAIT:
     LDA #01
