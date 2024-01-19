@@ -8,7 +8,7 @@ DSPCR = $D013 ; Decides when a char is set.
 cursor_ptr_x = $D014
 cursor_ptr_y = $D015
 
-.export RESET, ECHO, WAIT, REGKEY
+.export RESET, ECHO, ECHOXY_P, ECHOXY, WAIT
 RESET:
     ; ...
     RTS
@@ -19,6 +19,30 @@ ECHO:
     BEQ BACKSPACE
     JSR CHARCHANGE
     INC cursor_ptr_x ; Move the cursor
+    RTS
+
+ECHOXY_P: ; Preserves the current cursor
+    STA DSP
+    LDA cursor_ptr_x ; Push current pointers to stack
+    PHA
+    LDA cursor_ptr_y
+    PHA
+
+    STX cursor_ptr_x
+    STY cursor_ptr_y
+    JSR CHARCHANGE
+
+    PLA
+    STA cursor_ptr_y
+    PLA
+    STA cursor_ptr_x
+    RTS
+
+ECHOXY:
+    STA DSP
+    STX cursor_ptr_x
+    STY cursor_ptr_y
+    JSR CHARCHANGE
     RTS
 
 BACKSPACE:
@@ -32,8 +56,6 @@ CHARCHANGE: ; My odd way to detect a character change
     STA DSPCR
     STY DSPCR
     RTS
-
-; ECHOXY
 
 WAIT:
     LDA #01

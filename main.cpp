@@ -78,7 +78,7 @@ int main( int argc, char *argv[] ) {
                 //     }
                 // }
                 
-                cpu.Execute( mem, false );
+                cpu.Execute( mem, true );
                 
 
                 // Text rendering
