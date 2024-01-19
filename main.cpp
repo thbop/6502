@@ -37,6 +37,7 @@ int main( int argc, char *argv[] ) {
     SDL_Window* window = NULL;
     SDL_Renderer* renderer = NULL;
 
+    char key;
 
     if ( W_Init() ) {
         // Create window
@@ -54,8 +55,11 @@ int main( int argc, char *argv[] ) {
                             running = false;
                             break;
                         case SDL_KEYUP:
-                            mem[0xD010] = W_ProcessKey( event.key.keysym );
-                            mem[0xD011] = 1; // KBDCR
+                            key = W_ProcessKey( event.key.keysym );
+                            if (key) {
+                                mem[0xD010] = key;
+                                mem[0xD011] = 1; // KBDCR
+                            }
                             break;
                         default:
                             break;
@@ -73,16 +77,15 @@ int main( int argc, char *argv[] ) {
                 //         W_Draw40( renderer, i, j, (i + j) % 15 );
                 //     }
                 // }
-
-                cpu.Execute( mem, false ); // Still a cycles issue
-                mem[0xD011] = 0;
+                
+                cpu.Execute( mem, false );
+                
 
                 // Text rendering
                 W_RenderTextBuffer( renderer );
 
                 // Update screen
                 SDL_RenderPresent( renderer );
-                
             }
         }
     }

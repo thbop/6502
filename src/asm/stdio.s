@@ -24,6 +24,7 @@ WAIT:
     LDA #01
     AND KBDCR
     BEQ WAIT ; If 0, wait
+    STY KBDCR ; Assuming that Y=0, clears key press
     JMP REGKEY
 
 REGKEY:

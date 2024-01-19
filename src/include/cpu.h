@@ -193,10 +193,16 @@ struct CPU {
         C = (OldByte & 0b10000000) > 0;
     }
 
-    void BITSsetStatus( Byte Value ) {
+    void BITSetStatus( Byte Value ) {
         Z = !(Value & A);
         V = ( 0b01000000 & Value ) > 0;
         N = ( 0b10000000 & Value ) > 0;
+    }
+
+    void CompareSetStatus( Byte Reg, Byte Value ) {
+        C = ( Reg >= Value );
+        Z = ( Reg = Value );
+        N = (Value & 0b10000000) > 0; 
     }
 
     void LSR( Byte& Value ) { // Handles SetStatus and takes 1 cycle
@@ -564,6 +570,26 @@ struct CPU {
         INS_ROR_ABS = 0x6E,
         INS_ROR_ABX = 0x7E,
 
+        // CMP
+        INS_CMP_IM = 0xC9,
+        INS_CMP_ZP = 0xC5,
+        INS_CMP_ZPX = 0xD5,
+        INS_CMP_ABS = 0xCD,
+        INS_CMP_ABX = 0xDD,
+        INS_CMP_ABY = 0xD9,
+        INS_CMP_IX = 0xC1,
+        INS_CMP_IY = 0xD1,
+
+        // CPX
+        INS_CPX_IM = 0xE0,
+        INS_CPX_ZP = 0xE4,
+        INS_CPX_ABS = 0xEC,
+
+        // CPY
+        INS_CPY_IM = 0xC0,
+        INS_CPY_ZP = 0xC4,
+        INS_CPY_ABS = 0xCC,
+
         // STA
         INS_STA_ZP = 0x85,
         INS_STA_ZPX = 0x95,
@@ -801,11 +827,11 @@ void Execute( Mem& memory, bool debug ) {
             // BIT
             case INS_BIT_ZP: {
                 Byte Value = LoadZeroPage( memory );
-                BITSsetStatus( Value );
+                BITSetStatus( Value );
             } break;
             case INS_BIT_ABS: {
                 Byte Value = LoadAbsolute( memory );
-                BITSsetStatus( Value );
+                BITSetStatus( Value );
             } break;
             // LDA
             case INS_LDA_IM: {
@@ -1015,6 +1041,69 @@ void Execute( Mem& memory, bool debug ) {
                 memory[AbsAddr] = Value;
                 
             } break;
+
+            // CMP
+            case INS_CMP_IM: {
+                Byte Value = FetchByte( memory );
+                CompareSetStatus( A, Value );
+            } break;
+            case INS_CMP_ZP: {
+                Byte Value = LoadZeroPage( memory );
+                CompareSetStatus( A, Value );
+            } break;
+            case INS_CMP_ZPX: {
+                Byte Value = LoadZeroPageX( memory );
+                CompareSetStatus( A, Value );
+            } break;
+            case INS_CMP_ABS: {
+                Byte Value = LoadAbsolute( memory );
+                CompareSetStatus( A, Value );
+            } break;
+            case INS_CMP_ABX: {
+                Byte Value = LoadAbsoluteX( memory );
+                CompareSetStatus( A, Value );
+            } break;
+            case INS_CMP_ABY: {
+                Byte Value = LoadAbsoluteY( memory );
+                CompareSetStatus( A, Value );
+            } break;
+            case INS_CMP_IX: {
+                Byte Value = LoadIndirectX( memory );
+                CompareSetStatus( A, Value );
+            } break;
+            case INS_CMP_IY: {
+                Byte Value = LoadIndirectY( memory );
+                CompareSetStatus( A, Value );
+            } break;
+
+            // CPX
+            case INS_CPX_IM: {
+                Byte Value = FetchByte( memory );
+                CompareSetStatus( X, Value );
+            } break;
+            case INS_CPX_ZP: {
+                Byte Value = LoadZeroPage( memory );
+                CompareSetStatus( X, Value );
+            } break;
+            case INS_CPX_ABS: {
+                Byte Value = LoadAbsolute( memory );
+                CompareSetStatus( X, Value );
+            } break;
+
+            // CPY
+            case INS_CPY_IM: {
+                Byte Value = FetchByte( memory );
+                CompareSetStatus( Y, Value );
+            } break;
+            case INS_CPY_ZP: {
+                Byte Value = LoadZeroPage( memory );
+                CompareSetStatus( Y, Value );
+            } break;
+            case INS_CPY_ABS: {
+                Byte Value = LoadAbsolute( memory );
+                CompareSetStatus( Y, Value );
+            } break;
+
             // STA
             case INS_STA_ZP: { // None of the these affect flags
                 WriteZeroPage( A, memory );

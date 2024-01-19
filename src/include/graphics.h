@@ -77,6 +77,7 @@ SDL_Renderer* W_CreateRenderer( SDL_Window*& window ) {
 
 char W_ProcessKey( SDL_Keysym& keysym ) {
     char character = keysym.sym;
+    printf( "%x\n", character );
     if ( keysym.mod == 4097 ) {
         character -= 32;
     } else if (keysym.sym > 127) {
