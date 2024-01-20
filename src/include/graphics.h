@@ -80,9 +80,9 @@ char W_ProcessKey( SDL_Keysym& keysym ) {
     // printf( "%x\n", character );
     if ( keysym.mod == 4097 ) {
         character -= 32;
-    } else if (keysym.sym > 127) {
-        character = 0;
-    }
+    } // else if (keysym.sym > 127) {
+    //     character = 0;
+    // }
     return character;
 }
 
