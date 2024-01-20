@@ -659,7 +659,8 @@ void Execute( Mem& memory, bool debug ) {
             // printf("B: 0x%x | ", B);
             // printf("V: 0x%x | ", V);
             printf("N: 0x%x | ", N);
-            printf("RA: 0x%x |\n", memory[0xD010]);
+            printf("dspcr: 0x%x | ", memory[0xD013]);
+            printf("y: 0x%x |\n", memory[0xD015]);
         }
         
         switch( Ins ) {

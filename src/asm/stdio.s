@@ -5,9 +5,8 @@ KBDCR = $D011
 
 DSP = $D012 ; Display
 DSPCR = $D013 ; Decides when a char is set.
-cursor_ptr_x = $D014
-cursor_ptr_y = $D015
-; user cursor D016 and D017
+dsp_cursor_x = $D014
+dsp_cursor_y = $D015
 
 .export RESET, ECHO, ECHOXY, WAITKEY, WAITARROW
 RESET:
@@ -19,22 +18,22 @@ ECHO:
     CMP DSP
     BEQ BACKSPACE
     JSR CHARCHANGE
-    INC cursor_ptr_x ; Move the cursor
+    INC dsp_cursor_x ; Move the cursor
     RTS
 
 BACKSPACE:
     JSR CHARCHANGE
-    DEC cursor_ptr_x
+    DEC dsp_cursor_x
     RTS
 
 ECHOXY:
     STA DSP
-    STX cursor_ptr_x
-    STY cursor_ptr_y
+    STX dsp_cursor_x
+    STY dsp_cursor_y
     JSR CHARCHANGE
     RTS
 
-CHARCHANGE: ; My odd way to detect a character change
+CHARCHANGE: ; My odd way to cause a character change
     LDA #01
     LDY #00
     STA DSPCR

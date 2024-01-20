@@ -1,7 +1,7 @@
 .import ECHOXY, WAITARROW
 
-cursor_x = $D016
-cursor_y = $D017
+cursor_x = $C010
+cursor_y = $C011
 
 .export cursor_run
 cursor_run:
