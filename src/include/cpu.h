@@ -615,11 +615,17 @@ struct CPU {
         INS_INC_ABS = 0xEE,
         INS_INC_ABX = 0xFE,
 
+        INS_INX = 0xE8,
+        INS_INY = 0xC8,
+
         // Decrements
         INS_DEC_ZP = 0xC6,
         INS_DEC_ZPX = 0xD6,
         INS_DEC_ABS = 0xCE,
         INS_DEC_ABX = 0xDE,
+
+        INS_DEX = 0xCA,
+        INS_DEY = 0x88,
 
         // BIT
         INS_BIT_ZP = 0x24,
@@ -1189,6 +1195,15 @@ void Execute( Mem& memory, bool debug ) {
                 SetGenericStatus( Value );
             } break;
 
+            case INS_INX: {
+                X++;
+                SetGenericStatus( X );
+            } break;
+            case INS_INY: {
+                Y++;
+                SetGenericStatus( Y );
+            } break;
+
             // Decrements
             case INS_DEC_ZP: {
                 Byte ZeroPageAddr;
@@ -1217,6 +1232,15 @@ void Execute( Mem& memory, bool debug ) {
                 Value--;
                 WriteAbsolute( AbsAddr, Value, memory );
                 SetGenericStatus( Value );
+            } break;
+
+            case INS_DEX: {
+                X--;
+                SetGenericStatus( X );
+            } break;
+            case INS_DEY: {
+                Y--;
+                SetGenericStatus( Y );
             } break;
             
             // Implied instructions
