@@ -17,7 +17,7 @@ def padded_hex(value, padding=8):
     return ('0' * (padding - len(h))) + h # Adds padding and returns result.
 
 
-for j in range( 0, min(len(data), args.max), 32 ):
+for j in range( 0, len(data), 32 ) if args.max == None else range( 0, min(len(data), args.max), 32 ):
     print(end=padded_hex( int(j/2) ) + '  ') # Prints line number
     ascii_chars = ' |'
     for i in range(0, 32, 2):
