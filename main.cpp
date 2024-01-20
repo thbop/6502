@@ -18,6 +18,7 @@ int main( int argc, char *argv[] ) {
     mem.LoadFile("thbop.out");
     cpu.Reset( mem );
 
+    // mem.PrintRegion( 0x8000, 0x9000 );
 
     // cpu.Execute( 50, mem, true );
     // cpu.printRegFlags();

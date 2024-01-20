@@ -75,14 +75,14 @@ struct Mem {
 
     void LoadFile( const char *filename, Word startAddress=0x8000 ) {
         // Code adapted from that written by Bard (https://bard.google.com/)
-        FILE *fp = fopen(filename, "r");
+        FILE *fp = fopen(filename, "rb");
         if (fp == NULL) {
             printf("Could not open file.\n");
         }
         int i = startAddress;
         while ( (Data[i] = fgetc(fp)) != EOF ) {
-            i++;
             if (i > 0xFFFF) { break; }
+            i++;
         }
         fclose(fp);
     }
