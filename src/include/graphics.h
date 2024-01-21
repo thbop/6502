@@ -110,7 +110,7 @@ void W_DrawASCII( SDL_Renderer*& renderer, unsigned char character, int x, int y
     SDL_Rect char_pix = {x*15 + x*3 + 3, y*21 + y*3 + 3, 3, 3};
     for (int j = 0; j < 7; j++) {
         for (int i = 0; i < 5; i++) {
-            if (ASCII[character][j][i]) { W_DrawRect( renderer, char_pix, W_WHITE ); }
+            if (ASCII[character][j][i]) { W_DrawRect( renderer, char_pix, W_LR_PALETTE[13] ); }
             char_pix.x += 3;
         }
         char_pix.x = x*15 + x*3 + 3;
