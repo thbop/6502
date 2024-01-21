@@ -6,6 +6,10 @@
 The 6502 is a CPU used in many older computers; most notably the NES. The goal of this project is emulate most (if not all) of the logic in the 6502.
 An added benefit is that I get to learn much about the 6502 and its inner workings while also learning about general CPU architecture in general (not to mention this is my first major C++ project).
 
+![Grid Test](https://raw.githubusercontent.com/thbop/6502/main/misc/grid.gif)
+
+Example using assembled code to draw a grid and move a cursor via arrow keys.
+
 ## Program Architecture:
 The original design and functionality is completely copied from [@Dave Poo](https://github.com/davepoo)'s video found here: https://www.youtube.com/watch?v=qJgsuQoy9bc
 
