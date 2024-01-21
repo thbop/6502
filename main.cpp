@@ -14,8 +14,8 @@ int main( int argc, char *argv[] ) {
     Mem mem;
     CPU cpu;
     
-
-    mem.LoadFile("thbop.out");
+    const char* bios_file_name = "thbop.out";
+    mem.LoadFile(bios_file_name);
     cpu.Reset( mem );
 
     // mem.PrintRegion( 0x8000, 0x9000 );
@@ -60,6 +60,13 @@ int main( int argc, char *argv[] ) {
                             if (key) {
                                 mem[0xD010] = key;
                                 mem[0xD011] = 1; // KBDCR
+                            }
+                            if (key == 0x3A) {
+                                mem.Initialize();
+                                mem.LoadFile(bios_file_name);
+                                cpu.Reset( mem );
+                            } else if (key == 0x3B) {
+                                W_ClearTextBuffer();
                             }
                             break;
                         default:

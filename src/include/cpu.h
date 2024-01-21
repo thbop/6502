@@ -45,11 +45,11 @@ struct Mem {
     */
     Byte Data[MAX_MEM];
 
-    // void Initialize() {
-    //     for ( u32 i = 0; i < MAX_MEM; i++ ) {
-    //         Data[i] = 0;
-    //     }
-    // }
+    void Initialize() {
+        for ( u32 i = 0; i < MAX_MEM; i++ ) {
+            Data[i] = 0;
+        }
+    }
 
     // Read 1 byte
     Byte operator[]( u32 Address ) const {

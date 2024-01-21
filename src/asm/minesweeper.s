@@ -16,6 +16,7 @@ init:
     jsr draw_h_lines
     jmp loop
 
+; Draw grid
 draw_h_lines:
     ldy draw_y
     ldx #01
@@ -56,7 +57,7 @@ draw_v_line:
     sty draw_y
     rts
 
-
+; Cursor stuff
 cursor_run:
     jsr WAITARROW
     jsr cursor_process_input
@@ -110,7 +111,7 @@ cursor_draw:
     jsr ECHOXY
     rts
 
-
+; Main loop
 loop:
     jsr cursor_run
     jmp loop

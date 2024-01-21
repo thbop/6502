@@ -101,10 +101,10 @@ void W_DrawRect( SDL_Renderer*& renderer, const SDL_Rect rect, int (&color)[4] )
 // 40x40 or 40x48
 // 280x192
 
-void W_Draw40( SDL_Renderer*& renderer, int x, int y, int color ) {
-    SDL_Rect rect = { x * 20, (int)(y * 12.5), 20, 13 };
-    W_DrawRect( renderer, rect, W_LR_PALETTE[color] );
-}
+// void W_Draw40( SDL_Renderer*& renderer, int x, int y, int color ) {
+//     SDL_Rect rect = { x * 20, (int)(y * 12.5), 20, 13 };
+//     W_DrawRect( renderer, rect, W_LR_PALETTE[color] );
+// }
 
 void W_DrawASCII( SDL_Renderer*& renderer, unsigned char character, int x, int y ) {
     SDL_Rect char_pix = {x*15 + x*3 + 3, y*21 + y*3 + 3, 3, 3};
@@ -131,6 +131,13 @@ unsigned char W_TextPointer[2] = {0, 0};
     
 // }
 
+void W_ClearTextBuffer() {
+    for (int j = 0; j < 28; j++) {
+        for (int i = 0; i < 44; i++) {
+            W_TextBuffer[j][i] = 0;
+        }
+    }
+}
 
 void W_RenderTextBuffer( SDL_Renderer*& renderer ) {
     for (int j = 0; j < 28; j++) {
