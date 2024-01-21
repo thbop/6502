@@ -5,8 +5,6 @@ cursor_y = $C011
 
 .export cursor_run
 cursor_run:
-    lda #' '
-    jsr cursor_draw
     jsr WAITARROW
     jsr cursor_process_input
     lda #'0'
@@ -29,15 +27,23 @@ cursor_process_input:
     rts
 
 cursor_x_inc:
+    lda #' '
+    jsr cursor_draw
     inc cursor_x
     rts
 cursor_x_dec:
+    lda #' '
+    jsr cursor_draw
     dec cursor_x
     rts
 cursor_y_inc:
+    lda #' '
+    jsr cursor_draw
     inc cursor_y
     rts
 cursor_y_dec:
+    lda #' '
+    jsr cursor_draw
     dec cursor_y
     rts
 

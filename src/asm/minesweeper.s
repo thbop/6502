@@ -12,13 +12,36 @@ init:
     sta cursor_x
     sta cursor_y
     jsr draw_v_lines
+    ldx #01
+    jsr draw_h_lines
     jmp loop
+
+draw_h_lines:
+    ldy draw_y
+    ldx #01
+    jsr draw_h_line
+    inc draw_y
+    inc draw_y
+    ldy draw_y
+    cpy #18
+    bne draw_h_lines
+    rts
+
+draw_h_line:
+    ldy draw_y
+    lda #'_'
+    jsr ECHOXY
+    inx
+    inx
+    cpx #17
+    bne draw_h_line
+    rts
 
 draw_v_lines:
     jsr draw_v_line
     inx
     inx
-    cpx #16
+    cpx #18
     bne draw_v_lines
     rts
 
@@ -27,7 +50,7 @@ draw_v_line:
     jsr ECHOXY
     inc draw_y
     ldy draw_y
-    cpy #16
+    cpy #17
     bne draw_v_line
     ldy #00
     sty draw_y
@@ -35,8 +58,6 @@ draw_v_line:
 
 
 cursor_run:
-    lda #' '
-    jsr cursor_draw
     jsr WAITARROW
     jsr cursor_process_input
     lda #'0'
@@ -59,18 +80,26 @@ cursor_process_input:
     rts
 
 cursor_x_inc:
+    lda #' '
+    jsr cursor_draw
     inc cursor_x
     inc cursor_x
     rts
 cursor_x_dec:
+    lda #' '
+    jsr cursor_draw
     dec cursor_x
     dec cursor_x
     rts
 cursor_y_inc:
+    lda #' '
+    jsr cursor_draw
     inc cursor_y
     inc cursor_y
     rts
 cursor_y_dec:
+    lda #' '
+    jsr cursor_draw
     dec cursor_y
     dec cursor_y
     rts
@@ -80,6 +109,7 @@ cursor_draw:
     ldy cursor_y
     jsr ECHOXY
     rts
+
 
 loop:
     jsr cursor_run
