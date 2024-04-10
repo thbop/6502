@@ -14,7 +14,7 @@ int main() {
     Mem mem;
     CPU cpu;
     
-    mem.LoadFile("test.out");
+    mem.LoadFile("os.out");
     cpu.Reset( mem );
 
     InitWindow( WIDTH, HEIGHT, "6502 Emulator" );

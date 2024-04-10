@@ -1,6 +1,6 @@
 @echo off
 cd src/os
-cc65 test.c
-cl65 -C bios.cfg test.s -o test.out
+cc65 os.c
+cl65 -C bios.cfg os.s -o os.out
 cd ..
 cd ..

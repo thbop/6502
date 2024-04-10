@@ -113,7 +113,7 @@ struct CPU {
 
 
     void Reset( Mem& memory ) {
-        PC = ReadWord( (Word)0xFFFC, memory );
+        PC = 0x0803; //ReadWord( (Word)0xFFFC, memory );
         SP = 0x01FF;
         C = Z = I = D = B = V = N = 0;
         A = X = Y = 0;
