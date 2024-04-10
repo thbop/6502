@@ -1,5 +1,8 @@
 *.exe
 *.o
-*.bat
 .vscode
 test.c
+/.vscode
+Makefile
+*.lib
+*.mac
